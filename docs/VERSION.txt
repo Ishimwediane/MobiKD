@@ -1,0 +1,8 @@
+Model: KD-MobileNetV2 Float16
+Teacher: ResNet50
+Student: MobileNetV2
+Deployment: TFLite Float16
+Accuracy: 98.54%
+Size: 4.63 MB
+Status: Production Ready
+Date: 2026-05-20

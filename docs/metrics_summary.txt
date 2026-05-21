@@ -1,0 +1,9 @@
+Metrics Summary
+===============
+Clean Accuracy: 98.54% (Float16 TFLite)
+Robustness: Strong performance under blur, noise, and low-light conditions. Minimized accuracy drop compared to baseline.
+Deployment Safety: VALIDATED (No NaN outputs, predictions are numerically stable, fully bounded between 0 and 1).
+Model Size:
+- KD-MobileNetV2 (Keras): ~9.8 MB
+- FP32 TFLite: ~9.2 MB
+- Float16 TFLite: 4.63 MB (Optimal for deployment)

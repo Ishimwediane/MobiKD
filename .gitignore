@@ -1,0 +1,14 @@
+# Ignore models directory and model files
+models/
+model/
+*.h5
+*.tflite
+*.pb
+*.keras
+*.pt
+*.pth
+__pycache__/
+*.pyc
+
+lead and not leaf/
+.ipynb_checkpoints/
