@@ -1,0 +1,83 @@
+{
+  "accuracy": 0.83006993006993,
+  "f1_macro": 0.8319561564909964,
+  "precision_macro": 0.8508090528081529,
+  "recall_macro": 0.8319637234110918,
+  "balanced_accuracy": 0.8319637234110918,
+  "confusion_matrix": [
+    [
+      303,
+      31,
+      21,
+      9
+    ],
+    [
+      0,
+      330,
+      6,
+      6
+    ],
+    [
+      2,
+      72,
+      274,
+      16
+    ],
+    [
+      9,
+      53,
+      18,
+      280
+    ]
+  ],
+  "per_class": {
+    "early_blight": {
+      "precision": 0.964968152866242,
+      "recall": 0.8324175824175825,
+      "f1-score": 0.8938053097345132,
+      "support": 364.0
+    },
+    "healthy": {
+      "precision": 0.6790123456790124,
+      "recall": 0.9649122807017544,
+      "f1-score": 0.7971014492753623,
+      "support": 342.0
+    },
+    "late_blight": {
+      "precision": 0.8589341692789969,
+      "recall": 0.7527472527472527,
+      "f1-score": 0.8023426061493412,
+      "support": 364.0
+    },
+    "not_potato_leaf": {
+      "precision": 0.9003215434083601,
+      "recall": 0.7777777777777778,
+      "f1-score": 0.834575260804769,
+      "support": 360.0
+    },
+    "accuracy": 0.83006993006993,
+    "macro avg": {
+      "precision": 0.8508090528081529,
+      "recall": 0.8319637234110918,
+      "f1-score": 0.8319561564909964,
+      "support": 1430.0
+    },
+    "weighted avg": {
+      "precision": 0.8533135825944745,
+      "recall": 0.83006993006993,
+      "f1-score": 0.8324850565899397,
+      "support": 1430.0
+    }
+  },
+  "model_path": "/home/diane/MobiKD/models/potato_disease/kd_mobilenetv2_potato_disease.keras",
+  "model_size_mb": 24.86,
+  "elapsed_min": 42.23,
+  "phase1_best_val_acc": 0.7552447319030762,
+  "phase2_best_val_acc": 0.8356643319129944,
+  "class_names": [
+    "early_blight",
+    "healthy",
+    "late_blight",
+    "not_potato_leaf"
+  ]
+}

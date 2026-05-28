@@ -1,0 +1,10 @@
+Leaf Validator — Classification Report (Keras)
+============================================================
+              precision    recall  f1-score   support
+
+    not_leaf       0.98      0.97      0.97       975
+        leaf       0.97      0.98      0.97       975
+
+    accuracy                           0.97      1950
+   macro avg       0.97      0.97      0.97      1950
+weighted avg       0.97      0.97      0.97      1950
