@@ -1,0 +1,95 @@
+{
+  "users": [
+    { "phone": "0788123456", "name": "Mugisha Jean",     "scan_count": 48, "last_scan": "2026-06-02T14:32:00Z" },
+    { "phone": "0782345678", "name": "Uwimana Alice",    "scan_count": 31, "last_scan": "2026-06-01T09:05:00Z" },
+    { "phone": "0790111222", "name": "Nkurunziza Bob",   "scan_count": 72, "last_scan": "2026-05-30T12:30:00Z" },
+    { "phone": "0788999000", "name": "Kagame Paul",      "scan_count": 15, "last_scan": "2026-05-25T10:00:00Z" },
+    { "phone": "0785444333", "name": "Mukamana Rose",    "scan_count": 63, "last_scan": "2026-06-02T10:20:00Z" },
+    { "phone": "0783777888", "name": "Habimana Eric",    "scan_count": 9,  "last_scan": "2026-05-18T16:00:00Z" },
+    { "phone": "0789222111", "name": "Uwase Diane",      "scan_count": 55, "last_scan": "2026-06-03T09:45:00Z" },
+    { "phone": "0786333444", "name": "Niyonzima Felix",  "scan_count": 28, "last_scan": "2026-05-28T11:15:00Z" },
+    { "phone": "0787555666", "name": "Gasana Samuel",    "scan_count": 40, "last_scan": "2026-06-01T15:50:00Z" },
+    { "phone": "0781000999", "name": "Demo Farmer",      "scan_count": 12, "last_scan": "2026-05-15T08:30:00Z" }
+  ],
+  "scans": [
+    { "id": "scan_001", "user_phone": "0788123456", "user_name": "Mugisha Jean",    "stage1_label": "Potato Leaf",  "stage1_confidence": 0.97, "stage2_label": "Early Blight",   "stage2_confidence": 0.89, "timestamp": "2026-06-02T14:32:00Z" },
+    { "id": "scan_002", "user_phone": "0789222111", "user_name": "Uwase Diane",     "stage1_label": "Potato Leaf",  "stage1_confidence": 0.99, "stage2_label": "Healthy",         "stage2_confidence": 0.95, "timestamp": "2026-06-03T08:11:00Z" },
+    { "id": "scan_003", "user_phone": "0790111222", "user_name": "Nkurunziza Bob",  "stage1_label": "Potato Leaf",  "stage1_confidence": 0.93, "stage2_label": "Late Blight",     "stage2_confidence": 0.88, "timestamp": "2026-06-01T17:44:00Z" },
+    { "id": "scan_004", "user_phone": "0785444333", "user_name": "Mukamana Rose",   "stage1_label": "Non-Potato",   "stage1_confidence": 0.98, "stage2_label": null,              "stage2_confidence": null, "timestamp": "2026-06-02T10:20:00Z" },
+    { "id": "scan_005", "user_phone": "0782345678", "user_name": "Uwimana Alice",   "stage1_label": "Potato Leaf",  "stage1_confidence": 0.95, "stage2_label": "Healthy",         "stage2_confidence": 0.91, "timestamp": "2026-06-01T09:05:00Z" },
+    { "id": "scan_006", "user_phone": "0787555666", "user_name": "Gasana Samuel",   "stage1_label": "Potato Leaf",  "stage1_confidence": 0.96, "stage2_label": "Bacterial Wilt",  "stage2_confidence": 0.82, "timestamp": "2026-06-01T15:50:00Z" },
+    { "id": "scan_007", "user_phone": "0788123456", "user_name": "Mugisha Jean",    "stage1_label": "Potato Leaf",  "stage1_confidence": 0.94, "stage2_label": "Late Blight",     "stage2_confidence": 0.86, "timestamp": "2026-05-30T12:30:00Z" },
+    { "id": "scan_008", "user_phone": "0786333444", "user_name": "Niyonzima Felix", "stage1_label": "Potato Leaf",  "stage1_confidence": 0.98, "stage2_label": "Healthy",         "stage2_confidence": 0.97, "timestamp": "2026-05-28T11:15:00Z" },
+    { "id": "scan_009", "user_phone": "0783777888", "user_name": "Habimana Eric",   "stage1_label": "Non-Potato",   "stage1_confidence": 0.91, "stage2_label": null,              "stage2_confidence": null, "timestamp": "2026-05-18T16:00:00Z" },
+    { "id": "scan_010", "user_phone": "0789222111", "user_name": "Uwase Diane",     "stage1_label": "Potato Leaf",  "stage1_confidence": 0.97, "stage2_label": "Early Blight",    "stage2_confidence": 0.90, "timestamp": "2026-06-03T09:45:00Z" }
+  ],
+  "stats": {
+    "total_users": 10,
+    "total_scans": 373,
+    "diseased_count": 132,
+    "healthy_count": 218,
+    "disease_distribution": [
+      { "label": "Healthy",       "count": 218 },
+      { "label": "Early Blight",  "count": 62  },
+      { "label": "Late Blight",   "count": 47  },
+      { "label": "Bacterial Wilt","count": 23  }
+    ],
+    "monthly_scan_trend": [
+      { "month": "2026-01", "total": 18,  "healthy": 12, "diseased": 6  },
+      { "month": "2026-02", "total": 27,  "healthy": 18, "diseased": 9  },
+      { "month": "2026-03", "total": 35,  "healthy": 22, "diseased": 13 },
+      { "month": "2026-04", "total": 42,  "healthy": 27, "diseased": 15 },
+      { "month": "2026-05", "total": 61,  "healthy": 40, "diseased": 21 },
+      { "month": "2026-06", "total": 89,  "healthy": 58, "diseased": 31 }
+    ],
+    "monthly_users": [
+      { "month": "2026-01", "users": 2 },
+      { "month": "2026-02", "users": 1 },
+      { "month": "2026-03", "users": 2 },
+      { "month": "2026-04", "users": 1 },
+      { "month": "2026-05", "users": 3 },
+      { "month": "2026-06", "users": 1 }
+    ],
+    "avg_stage1_confidence": 95.8,
+    "avg_stage2_confidence": 88.9
+  },
+  "modelMetrics": {
+    "stage1": {
+      "name": "Leaf Validator (Stage 1)",
+      "accuracy": 97.4,
+      "precision": 96.8,
+      "recall": 98.1,
+      "f1": 97.4,
+      "avgLatency": 37,
+      "modelSize": "3.2 MB",
+      "framework": "TFLite",
+      "inputSize": "96×96"
+    },
+    "stage2": {
+      "name": "Disease Classifier (Stage 2)",
+      "accuracy": 94.2,
+      "precision": 93.6,
+      "recall": 94.8,
+      "f1": 94.2,
+      "avgLatency": 51,
+      "modelSize": "8.7 MB",
+      "framework": "TFLite",
+      "inputSize": "96×96"
+    },
+    "classes": [
+      { "label": "Healthy",        "accuracy": 97.1 },
+      { "label": "Early Blight",   "accuracy": 94.8 },
+      { "label": "Late Blight",    "accuracy": 93.5 },
+      { "label": "Bacterial Wilt", "accuracy": 91.2 }
+    ],
+    "latencyHistory": [
+      { "day": "Mon", "stage1": 38, "stage2": 52, "total": 90 },
+      { "day": "Tue", "stage1": 42, "stage2": 55, "total": 97 },
+      { "day": "Wed", "stage1": 35, "stage2": 48, "total": 83 },
+      { "day": "Thu", "stage1": 40, "stage2": 53, "total": 93 },
+      { "day": "Fri", "stage1": 37, "stage2": 50, "total": 87 },
+      { "day": "Sat", "stage1": 33, "stage2": 46, "total": 79 },
+      { "day": "Sun", "stage1": 30, "stage2": 44, "total": 74 }
+    ]
+  }
+}

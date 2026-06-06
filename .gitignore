@@ -16,3 +16,5 @@ __pycache__/
 
 lead and not leaf/
 .ipynb_checkpoints/
+
+.env
