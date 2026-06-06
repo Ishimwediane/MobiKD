@@ -6,15 +6,16 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import {
   LayoutDashboard, Users, ScanLine, Bug, Brain,
-  Settings, LogOut, ChevronLeft, ChevronRight
+  Settings, LogOut, ChevronLeft, ChevronRight, Microscope
 } from 'lucide-react';
 
 const navItems = [
-  { href: '/',         label: 'Dashboard',         icon: LayoutDashboard },
-  { href: '/users',    label: 'Users',              icon: Users           },
-  { href: '/scans',    label: 'Scan History',       icon: ScanLine        },
-  { href: '/diseases', label: 'Disease Analytics',  icon: Bug             },
-  { href: '/model',    label: 'AI Model Stats',     icon: Brain           },
+  { href: '/',          label: 'Dashboard',         icon: LayoutDashboard },
+  { href: '/users',     label: 'Users',              icon: Users           },
+  { href: '/scans',     label: 'Scan History',       icon: ScanLine        },
+  { href: '/diagnose',  label: 'Admin Scanner',      icon: Microscope      },
+  { href: '/diseases',  label: 'Disease Analytics',  icon: Bug             },
+  { href: '/model',     label: 'AI Model Stats',     icon: Brain           },
 ];
 
 interface SidebarProps {

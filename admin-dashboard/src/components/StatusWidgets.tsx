@@ -18,28 +18,7 @@ export function LoadingSpinner({ message = 'Loading data…' }: { message?: stri
   );
 }
 
-export function BackendBanner({ isMock }: { isMock: boolean }) {
-  if (!isMock) return null;
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '10px 16px', marginBottom: 20,
-      background: 'rgba(255,140,0,0.08)',
-      border: '1px solid rgba(255,140,0,0.25)',
-      borderRadius: 10, fontSize: 13,
-      color: '#e65100',
-    }}>
-      <span style={{ fontSize: 16 }}>⚠️</span>
-      <span>
-        <strong>Backend unreachable or no data yet.</strong> Showing sample data from{' '}
-        <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 5px', borderRadius: 4 }}>
-          mockData.json
-        </code>
-        . Start the FastAPI server and data will load automatically.
-      </span>
-    </div>
-  );
-}
+
 
 export function ErrorCard({ message }: { message: string }) {
   return (

@@ -6,7 +6,7 @@ import {
   shortMonth, diseaseBadge, diseaseColor,
   type AdminStats, type AdminScan,
 } from '@/lib/api';
-import { LoadingSpinner, BackendBanner } from '@/components/StatusWidgets';
+import { LoadingSpinner } from '@/components/StatusWidgets';
 import ScanTrendChart from '@/components/ScanTrendChart';
 import DiseaseDonut from '@/components/DiseaseDonut';
 import UserGrowthChart from '@/components/UserGrowthChart';
@@ -14,24 +14,21 @@ import { Activity, ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 
 const KPI_ICONS: Record<string, string> = {
-  users: '👥', scans: '🔬', diseased: '🦠', healthy: '🌿', accuracy: '🤖',
+  users: '', scans: '', diseased: '', healthy: '', accuracy: '',
 };
 
 export default function DashboardPage() {
   const [stats, setStats]   = useState<AdminStats | null>(null);
   const [scans, setScans]   = useState<AdminScan[]>([]);
-  const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(false);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setError(false);
       const [s, sc] = await Promise.all([fetchAdminStats(), fetchAdminScans()]);
-
-      // Detect fallback: mock stats have exactly these numbers
-      const isFromMock = s.total_users <= 10 && s.total_scans <= 400;
-      setIsMock(isFromMock);
-
+      if (!s) { setError(true); setLoading(false); return; }
       setStats(s);
       setScans(sc.slice(0, 5));
       setLoading(false);
@@ -40,7 +37,13 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) return <LoadingSpinner message="Fetching dashboard data from backend…" />;
-  if (!stats)  return <div style={{ color: 'red' }}>Failed to load stats.</div>;
+  if (error || !stats) return (
+    <div style={{ textAlign: 'center', padding: 60 }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Cannot reach the backend</div>
+      <div style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>Make sure the Render service is running at <strong>{process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000'}</strong></div>
+    </div>
+  );
 
   const trendData = stats.monthly_scan_trend.map(m => ({
     month: shortMonth(m.month),
@@ -61,17 +64,15 @@ export default function DashboardPage() {
   }));
 
   const kpiCards = [
-    { label: 'Total Users',    value: stats.total_users,    change: '+' + Math.round(stats.total_users * 0.12), icon: '👥',  color: '#6d4c97', bg: 'rgba(109,76,151,0.1)'  },
-    { label: 'Total Scans',    value: stats.total_scans,    change: '+' + Math.round(stats.total_scans * 0.08), icon: '🔬', color: '#3EB75A', bg: 'rgba(62,183,90,0.12)'  },
-    { label: 'Diseases Found', value: stats.diseased_count, change: stats.diseased_count > 0 ? '↑' : '—',       icon: '🦠', color: '#e53935', bg: 'rgba(229,57,53,0.1)'   },
-    { label: 'Healthy Leaves', value: stats.healthy_count,  change: '+' + Math.round(stats.healthy_count * 0.05),icon: '🌿', color: '#3EB75A', bg: 'rgba(62,183,90,0.12)'  },
-    { label: 'Stage 2 Conf.',  value: `${stats.avg_stage2_confidence}%`, change: '↑', icon: '🤖', color: '#FF8C00', bg: 'rgba(255,140,0,0.12)' },
+    { label: 'Total Users',    value: stats.total_users,    change: '+' + Math.round(stats.total_users * 0.12)  },
+    { label: 'Total Scans',    value: stats.total_scans,    change: '+' + Math.round(stats.total_scans * 0.08)  },
+    { label: 'Diseases Found', value: stats.diseased_count, change: stats.diseased_count > 0 ? '↑' : '—'  },
+    { label: 'Healthy Leaves', value: stats.healthy_count,  change: '+' + Math.round(stats.healthy_count * 0.05) },
+    { label: 'Stage 2 Conf.',  value: `${stats.avg_stage2_confidence}%`, change: '↑' },
   ];
 
   return (
     <div>
-      <BackendBanner isMock={isMock} />
-
       {/* KPI Cards */}
       <div className="stat-grid">
         {kpiCards.map((k, i) => (

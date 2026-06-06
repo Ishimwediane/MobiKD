@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAdminUsers, deleteUser, type AdminUser } from '@/lib/api';
-import { LoadingSpinner, BackendBanner } from '@/components/StatusWidgets';
+import { LoadingSpinner } from '@/components/StatusWidgets';
 import { Search, UserPlus, Users as UsersIcon, UserCheck, UserX, Trash2 } from 'lucide-react';
 
 export default function UsersPage() {
@@ -44,7 +44,7 @@ export default function UsersPage() {
         <h1>User Management</h1>
         <p>All registered farmers using the MobiKD potato disease detection app.</p>
       </div>
-      <BackendBanner isMock={isMock} />
+
 
       {/* Quick stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
@@ -95,12 +95,7 @@ export default function UsersPage() {
                 <tr key={u.phone}>
                   <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{String(i + 1).padStart(2, '0')}</td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#3EB75A,#FF8C00)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-                        {u.name.charAt(0)}
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: 13 }}>{u.name}</span>
-                    </div>
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{u.name}</span>
                   </td>
                   <td style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--text-secondary)' }}>{u.phone}</td>
                   <td>

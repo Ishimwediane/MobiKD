@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAdminScans, diseaseBadge, type AdminScan } from '@/lib/api';
-import { LoadingSpinner, BackendBanner } from '@/components/StatusWidgets';
+import { LoadingSpinner } from '@/components/StatusWidgets';
 import { Search, Filter, ScanLine, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 
 export default function ScansPage() {
   const [scans, setScans]   = useState<AdminScan[]>([]);
-  const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState('all');
@@ -16,7 +15,6 @@ export default function ScansPage() {
     async function load() {
       setLoading(true);
       const data = await fetchAdminScans();
-      setIsMock(data.length <= 10);
       setScans(data);
       setLoading(false);
     }
@@ -46,7 +44,6 @@ export default function ScansPage() {
         <h1>Scan History</h1>
         <p>Complete record of all leaf disease detection scans performed via the MobiKD app.</p>
       </div>
-      <BackendBanner isMock={isMock} />
 
       {/* Quick stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>

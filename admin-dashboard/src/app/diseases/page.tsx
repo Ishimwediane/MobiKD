@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAdminStats, shortMonth, diseaseColor, type AdminStats } from '@/lib/api';
-import { LoadingSpinner, BackendBanner } from '@/components/StatusWidgets';
+import { LoadingSpinner } from '@/components/StatusWidgets';
 import { TrendingUp, TrendingDown, Bug } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -48,7 +48,7 @@ export default function DiseasesPage() {
         <h1>Disease Analytics</h1>
         <p>Breakdown of all detected potato diseases with distribution and trends.</p>
       </div>
-      <BackendBanner isMock={isMock} />
+
 
       {/* Disease summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(stats.disease_distribution.length, 5)}, 1fr)`, gap: 14, marginBottom: 24 }}>

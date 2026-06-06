@@ -1,17 +1,16 @@
 /**
  * MobiKD Admin Dashboard — API Service
  *
- * All data fetches go through this file.
- * Strategy: hit the real FastAPI backend first.
- * If the backend is down OR returns empty data, fall back to mockData.json.
+ * All live data fetches go directly to the FastAPI backend.
+ * Only model performance metrics (not stored in DB) use the static mockData.json.
  */
 
-import fallback from './mockData.json';
+import mockData from './mockData.json';
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? 'http://127.0.0.1:8000';
 
-const TIMEOUT_MS = 4000;
+const TIMEOUT_MS = 8000;
 
 // ─── Helper: fetch with timeout ───────────────────────────────────────────────
 
@@ -103,32 +102,59 @@ export interface ModelMetrics {
   latencyHistory: { day: string; stage1: number; stage2: number; total: number }[];
 }
 
+export interface DiagnoseResult {
+  stage1Label: string;
+  stage1Confidence: number;
+  stage2Label: string | null;
+  stage2Confidence: number | null;
+  latencyMs: number;
+}
+
 // ─── API fetch functions ──────────────────────────────────────────────────────
 
-/** Fetch all users. Falls back to mock JSON if backend is empty or unreachable. */
+/** Fetch all users from the live backend. */
 export async function fetchAdminUsers(): Promise<AdminUser[]> {
   const data = await getJson<AdminUser[]>('/admin/users');
-  if (data && data.length > 0) return data;
-  return fallback.users as AdminUser[];
+  return data ?? [];
 }
 
-/** Fetch all scans. Falls back to mock JSON if backend is empty or unreachable. */
+function normalizeStage1(label: string): string {
+  if (label === 'leaf') return 'Potato Leaf';
+  if (label === 'not_leaf') return 'Not Leaf';
+  return label; // Keep original if already formatted (e.g. Potato Leaf)
+}
+
+function normalizeStage2(label: string | null): string | null {
+  if (!label) return null;
+  if (label === 'healthy') return 'Healthy';
+  if (label === 'early_blight') return 'Early Blight';
+  if (label === 'late_blight') return 'Late Blight';
+  if (label === 'not_potato_leaf') return 'Not Potato Leaf';
+  return label;
+}
+
+/** Fetch all scans from the live backend. */
 export async function fetchAdminScans(): Promise<AdminScan[]> {
   const data = await getJson<AdminScan[]>('/admin/scans');
-  if (data && data.length > 0) return data;
-  return fallback.scans as AdminScan[];
+  if (!data) return [];
+  return data.map(scan => ({
+    ...scan,
+    stage1_label: normalizeStage1(scan.stage1_label),
+    stage2_label: normalizeStage2(scan.stage2_label),
+  }));
 }
 
-/** Fetch aggregate stats. Falls back to mock JSON if backend is empty or unreachable. */
-export async function fetchAdminStats(): Promise<AdminStats> {
-  const data = await getJson<AdminStats>('/admin/stats');
-  if (data && data.total_scans > 0) return data;
-  return fallback.stats as AdminStats;
-}
-
-/** Model metrics always come from mock JSON (not stored in DB). */
-export function getModelMetrics(): ModelMetrics {
-  return fallback.modelMetrics as ModelMetrics;
+/** Fetch aggregate stats from the live backend. */
+export async function fetchAdminStats(): Promise<AdminStats | null> {
+  const stats = await getJson<AdminStats>('/admin/stats');
+  if (!stats) return null;
+  return {
+    ...stats,
+    disease_distribution: (stats.disease_distribution || []).map(d => ({
+      label: normalizeStage2(d.label) || 'Unknown',
+      count: d.count,
+    })),
+  };
 }
 
 /** Delete a user via the backend. */
@@ -150,6 +176,53 @@ export async function checkBackendHealth(): Promise<boolean> {
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+/** Model performance metrics are static (not stored in DB) — read from local JSON. */
+export function getModelMetrics(): ModelMetrics {
+  return mockData.modelMetrics as ModelMetrics;
+}
+
+/**
+ * Submit a leaf image for AI diagnosis from the admin dashboard.
+ * Registers an admin phantom user if not exists, then POSTs to /diagnose.
+ */
+export async function diagnoseLeaf(imageFile: File): Promise<DiagnoseResult | null> {
+  const ADMIN_PHONE = 'admin@mobikd';
+
+  // Ensure admin user exists (safe to call multiple times)
+  try {
+    await fetch(`${API_BASE}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: ADMIN_PHONE, name: 'Admin', password: 'admin_mobikd_2024' }),
+    });
+  } catch { /* already registered is fine */ }
+
+  try {
+    const formData = new FormData();
+    formData.append('file', imageFile);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000); // 60s for cold start
+    const res = await fetch(`${API_BASE}/diagnose`, {
+      method: 'POST',
+      headers: { 'X-User-Phone': ADMIN_PHONE },
+      body: formData,
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      stage1Label: data.stage1Label,
+      stage1Confidence: data.stage1Confidence,
+      stage2Label: data.stage2Label ?? null,
+      stage2Confidence: data.stage2Confidence ?? null,
+      latencyMs: data.latencyMs,
+    };
+  } catch {
+    return null;
   }
 }
 

@@ -120,6 +120,23 @@ export default function SettingsPage() {
   const [showConfidence, setShowConfidence] = useState(true);
   const [storeImages, setStoreImages] = useState(true);
 
+  // Read initial theme from document.documentElement class on mount
+  useState(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
+  });
+
+  function applyTheme(t: 'light' | 'dark') {
+    setTheme(t);
+    if (t === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('mobikd-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('mobikd-theme', 'light');
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -162,7 +179,7 @@ export default function SettingsPage() {
               {(['light', 'dark'] as const).map(t => (
                 <button
                   key={t}
-                  onClick={() => setTheme(t)}
+                  onClick={() => applyTheme(t)}
                   style={{
                     flex: 1, padding: '14px 16px', borderRadius: 12, cursor: 'pointer',
                     border: `2px solid ${theme === t ? 'var(--color-primary)' : 'rgba(0,0,0,0.08)'}`,

@@ -642,3 +642,110 @@ body {
   .charts-grid-equal { grid-template-columns: 1fr; }
   .page-body { padding: 20px 16px; }
 }
+
+/* ─── Dark Mode ──────────────────────────────────────────────────────────────── */
+html.dark,
+html.dark body {
+  background: #0d1117;
+  color: #e6edf3;
+}
+
+html.dark {
+  --bg-main: #0d1117;
+  --bg-card: #161b22;
+  --bg-secondary: #1c2128;
+  --border-card: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.07);
+
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+
+  --sidebar-bg: #010409;
+  --sidebar-border: rgba(255,255,255,0.05);
+  --sidebar-text: #8b949e;
+
+  --color-primary-light: rgba(62,183,90,0.15);
+  --color-accent-light: rgba(255,140,0,0.15);
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-card-hover: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+html.dark .topbar {
+  background: rgba(22, 27, 34, 0.95) !important;
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+html.dark .topbar-search {
+  background: #1c2128 !important;
+  border-color: rgba(255,255,255,0.06);
+}
+
+html.dark .topbar-icon-btn {
+  background: #1c2128 !important;
+  border-color: rgba(255,255,255,0.06);
+  color: #8b949e;
+}
+
+html.dark .card {
+  background: #161b22 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+html.dark .stat-card {
+  background: #161b22 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+html.dark .data-table thead th {
+  background: #1c2128 !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+  color: #6e7681;
+}
+
+html.dark .data-table tbody tr {
+  border-bottom-color: rgba(255,255,255,0.04) !important;
+}
+
+html.dark .data-table tbody tr:hover {
+  background: rgba(255,255,255,0.03) !important;
+}
+
+html.dark .data-table tbody td { color: #e6edf3; }
+
+html.dark .filter-search {
+  background: #1c2128 !important;
+  border-color: rgba(255,255,255,0.06);
+}
+
+html.dark .filter-search input { color: #e6edf3; }
+
+html.dark .filter-select {
+  background: #1c2128 !important;
+  border-color: rgba(255,255,255,0.06);
+  color: #e6edf3;
+}
+
+html.dark .btn-outline {
+  background: #1c2128 !important;
+  border-color: rgba(255,255,255,0.08);
+  color: #8b949e;
+}
+
+html.dark .btn-outline:hover { background: #262c36 !important; }
+
+html.dark .progress-track { background: rgba(255,255,255,0.06) !important; }
+
+html.dark .page-header h1 { color: #e6edf3; }
+html.dark .page-header p  { color: #8b949e; }
+html.dark .card-title     { color: #e6edf3 !important; }
+html.dark .stat-value     { color: #e6edf3 !important; }
+html.dark .stat-label     { color: #6e7681; }
+
+html.dark .badge-green  { background: rgba(62,183,90,0.18);   color: #3EB75A; }
+html.dark .badge-amber  { background: rgba(255,140,0,0.18);   color: #FF8C00; }
+html.dark .badge-red    { background: rgba(229,57,53,0.18);   color: #ef5350; }
+html.dark .badge-purple { background: rgba(109,76,151,0.18);  color: #ab8fd8; }
+html.dark .badge-slate  { background: rgba(255,255,255,0.06); color: #8b949e; }
+
