@@ -24,26 +24,11 @@ export default function Topbar({ collapsed, title, subtitle }: TopbarProps) {
         </div>
       </div>
 
-      {/* Center — Search */}
-      <div className="topbar-search">
-        <Search size={15} color="var(--text-muted)" />
-        <input placeholder="Search users, scans, diseases…" />
-      </div>
-
       {/* Right */}
       <div className="topbar-right">
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>
           {greeting}, Admin
         </div>
-
-        <button className="topbar-icon-btn" aria-label="Notifications">
-          <Bell size={17} />
-          <span className="notif-dot" />
-        </button>
-
-        <button className="topbar-icon-btn" aria-label="Settings">
-          <Settings size={17} />
-        </button>
 
         <div className="admin-avatar" title="Admin">A</div>
       </div>
