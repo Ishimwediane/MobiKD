@@ -862,4 +862,18 @@ html.dark .form-input {
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* ─── Dropdown Hover Rules ─── */
+.dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+html.dark .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dropdown-item-logout:hover {
+  background: rgba(229, 57, 53, 0.08) !important;
+}
+
+
 
