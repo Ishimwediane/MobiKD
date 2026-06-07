@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User, Bell, Shield, Database, Server,
   Save, Eye, EyeOff, Leaf, Globe, Moon, Sun
@@ -121,10 +121,10 @@ export default function SettingsPage() {
   const [storeImages, setStoreImages] = useState(true);
 
   // Read initial theme from document.documentElement class on mount
-  useState(() => {
+  useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
-  });
+  }, []);
 
   function applyTheme(t: 'light' | 'dark') {
     setTheme(t);

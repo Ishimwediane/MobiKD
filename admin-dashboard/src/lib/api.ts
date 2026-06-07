@@ -169,6 +169,35 @@ export async function deleteUser(phone: string): Promise<boolean> {
   }
 }
 
+/** Create a new user from the admin dashboard. */
+export async function createUser(phone: string, name: string, password: string): Promise<boolean> {
+  try {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, name, password }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Update an existing user's details from the admin dashboard. */
+export async function updateUser(oldPhone: string, phone: string, name: string, password?: string): Promise<boolean> {
+  try {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/users/${encodeURIComponent(oldPhone)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, name, password: password || undefined }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+
 /** Check if the backend is reachable. */
 export async function checkBackendHealth(): Promise<boolean> {
   try {

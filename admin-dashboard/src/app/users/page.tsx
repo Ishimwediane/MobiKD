@@ -1,21 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchAdminUsers, deleteUser, type AdminUser } from '@/lib/api';
+import { fetchAdminUsers, deleteUser, createUser, updateUser, type AdminUser } from '@/lib/api';
 import { LoadingSpinner } from '@/components/StatusWidgets';
-import { Search, UserPlus, Users as UsersIcon, UserCheck, UserX, Trash2 } from 'lucide-react';
+import { Search, UserPlus, Users as UsersIcon, UserCheck, UserX, Trash2, Pencil } from 'lucide-react';
 
 export default function UsersPage() {
   const [users, setUsers]   = useState<AdminUser[]>([]);
-  const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [formData, setFormData] = useState({ name: '', phone: '', password: '' });
+  const [modalError, setModalError] = useState('');
+  const [saving, setSaving] = useState(false);
+
   async function load() {
     setLoading(true);
     const data = await fetchAdminUsers();
-    setIsMock(data.length <= 10 && data.some(u => u.phone === '0788123456'));
     setUsers(data);
     setLoading(false);
   }
@@ -28,12 +34,79 @@ export default function UsersPage() {
   );
 
   async function handleDelete(phone: string) {
-    if (!confirm(`Delete user ${phone} and all their scans?`)) return;
+    if (!confirm(`Are you sure you want to delete user ${phone} and all their scans?`)) return;
     setDeleting(phone);
     const ok = await deleteUser(phone);
-    if (ok) await load();
-    else alert('Delete failed — backend may not be running.');
+    if (ok) {
+      await load();
+    } else {
+      alert('Delete failed — backend may be offline or returned an error.');
+    }
     setDeleting(null);
+  }
+
+  function handleOpenModal(mode: 'add' | 'edit', user?: AdminUser) {
+    setModalMode(mode);
+    setModalError('');
+    if (mode === 'edit' && user) {
+      setSelectedUser(user);
+      setFormData({ name: user.name, phone: user.phone, password: '' });
+    } else {
+      setSelectedUser(null);
+      setFormData({ name: '', phone: '', password: '' });
+    }
+    setModalOpen(true);
+  }
+
+  function handleCloseModal() {
+    setModalOpen(false);
+    setFormData({ name: '', phone: '', password: '' });
+    setModalError('');
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setModalError('');
+    
+    const nameClean = formData.name.trim();
+    const phoneClean = formData.phone.trim();
+    
+    if (!nameClean || !phoneClean) {
+      setModalError('Name and Phone are required.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (modalMode === 'add') {
+        if (!formData.password || formData.password.length < 4) {
+          setModalError('Password must be at least 4 characters long.');
+          setSaving(false);
+          return;
+        }
+        const ok = await createUser(phoneClean, nameClean, formData.password);
+        if (ok) {
+          await load();
+          handleCloseModal();
+        } else {
+          setModalError('Failed to create user. Phone number might be already registered.');
+        }
+      } else {
+        if (selectedUser) {
+          const ok = await updateUser(selectedUser.phone, phoneClean, nameClean, formData.password || undefined);
+          if (ok) {
+            await load();
+            handleCloseModal();
+          } else {
+            setModalError('Failed to update user. Phone number might be already taken.');
+          }
+        }
+      }
+    } catch {
+      setModalError('An unexpected network error occurred.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) return <LoadingSpinner message="Fetching users from backend…" />;
@@ -44,7 +117,6 @@ export default function UsersPage() {
         <h1>User Management</h1>
         <p>All registered farmers using the MobiKD potato disease detection app.</p>
       </div>
-
 
       {/* Quick stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
@@ -70,7 +142,12 @@ export default function UsersPage() {
           <Search size={15} color="var(--text-muted)" />
           <input placeholder="Search by name or phone…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <button className="btn btn-primary" onClick={load}>↻ Refresh</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-outline" onClick={() => handleOpenModal('add')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <UserPlus size={14} /> Add Farmer
+          </button>
+          <button className="btn btn-primary" onClick={load}>↻ Refresh</button>
+        </div>
       </div>
 
       {/* Table */}
@@ -108,14 +185,23 @@ export default function UsersPage() {
                     {u.last_scan ? new Date(u.last_scan).toLocaleDateString('en-GB') : '—'}
                   </td>
                   <td>
-                    <button
-                      className="btn"
-                      style={{ background: 'rgba(229,57,53,0.08)', color: '#e53935', padding: '5px 10px', fontSize: 12 }}
-                      onClick={() => handleDelete(u.phone)}
-                      disabled={deleting === u.phone}
-                    >
-                      {deleting === u.phone ? '…' : <><Trash2 size={12} /> Delete</>}
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="btn"
+                        style={{ background: 'rgba(109,76,151,0.08)', color: '#6d4c97', padding: '5px 10px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                        onClick={() => handleOpenModal('edit', u)}
+                      >
+                        <Pencil size={12} /> Edit
+                      </button>
+                      <button
+                        className="btn"
+                        style={{ background: 'rgba(229,57,53,0.08)', color: '#e53935', padding: '5px 10px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                        onClick={() => handleDelete(u.phone)}
+                        disabled={deleting === u.phone}
+                      >
+                        {deleting === u.phone ? '…' : <><Trash2 size={12} /> Delete</>}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -126,6 +212,75 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
+
+      {/* Add/Edit Modal */}
+      {modalOpen && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-container" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{modalMode === 'add' ? 'Add New Farmer' : 'Edit Farmer Profile'}</h3>
+              <button className="modal-close" onClick={handleCloseModal}>&times;</button>
+            </div>
+            <form onSubmit={handleSave}>
+              <div className="modal-body">
+                {modalError && (
+                  <div style={{ background: 'var(--color-danger-light)', color: 'var(--color-danger)', padding: 10, borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+                    {modalError}
+                  </div>
+                )}
+                
+                <div className="form-group">
+                  <label className="form-label">Farmer Name</label>
+                  <input
+                    className="form-input"
+                    placeholder="e.g. Mugisha Jean"
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <input
+                    className="form-input"
+                    placeholder="e.g. 0788123456"
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                    disabled={saving}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    {modalMode === 'add' ? 'Password' : 'New Password (Optional)'}
+                  </label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder={modalMode === 'add' ? 'At least 4 characters' : 'Leave empty to keep current'}
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    required={modalMode === 'add'}
+                    minLength={4}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={handleCloseModal} disabled={saving}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? 'Saving…' : modalMode === 'add' ? 'Create User' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

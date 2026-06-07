@@ -20,7 +20,7 @@ export default function LatencyChart({ data }: { data: LatencyPoint[] }) {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
             <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} unit="ms" />
-            <Tooltip contentStyle={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 13 }} formatter={(val: number) => [`${val}ms`, '']} />
+            <Tooltip contentStyle={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 13 }} formatter={(val: any) => [`${val}ms`, '']} />
             <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
             <Line type="monotone" dataKey="stage1" stroke="#3EB75A" strokeWidth={2.5} dot={{ r: 4, fill: '#3EB75A' }} name="Stage 1" />
             <Line type="monotone" dataKey="stage2" stroke="#FF8C00" strokeWidth={2.5} dot={{ r: 4, fill: '#FF8C00' }} name="Stage 2" />

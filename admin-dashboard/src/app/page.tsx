@@ -64,11 +64,11 @@ export default function DashboardPage() {
   }));
 
   const kpiCards = [
-    { label: 'Total Users',    value: stats.total_users,    change: '+' + Math.round(stats.total_users * 0.12)  },
-    { label: 'Total Scans',    value: stats.total_scans,    change: '+' + Math.round(stats.total_scans * 0.08)  },
-    { label: 'Diseases Found', value: stats.diseased_count, change: stats.diseased_count > 0 ? '↑' : '—'  },
-    { label: 'Healthy Leaves', value: stats.healthy_count,  change: '+' + Math.round(stats.healthy_count * 0.05) },
-    { label: 'Stage 2 Conf.',  value: `${stats.avg_stage2_confidence}%`, change: '↑' },
+    { label: 'Total Users',    value: stats.total_users,    change: '+' + Math.round(stats.total_users * 0.12),   icon: '👥', bg: 'rgba(109,76,151,0.1)', color: '#6d4c97' },
+    { label: 'Total Scans',    value: stats.total_scans,    change: '+' + Math.round(stats.total_scans * 0.08),   icon: '📸', bg: 'rgba(255,140,0,0.12)', color: '#FF8C00' },
+    { label: 'Diseases Found', value: stats.diseased_count, change: stats.diseased_count > 0 ? '↑' : '—',         icon: '🍂', bg: 'rgba(229,57,53,0.1)', color: '#e53935' },
+    { label: 'Healthy Leaves', value: stats.healthy_count,  change: '+' + Math.round(stats.healthy_count * 0.05), icon: '🌿', bg: 'rgba(62,183,90,0.12)', color: '#3EB75A' },
+    { label: 'Stage 2 Conf.',  value: `${stats.avg_stage2_confidence}%`, change: '↑',                            icon: '🎯', bg: 'rgba(0,0,0,0.05)', color: '#888' },
   ];
 
   return (

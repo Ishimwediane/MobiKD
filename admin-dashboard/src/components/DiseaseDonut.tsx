@@ -5,7 +5,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 const RADIAN = Math.PI / 180;
 interface LabelProps { cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number; }
 
-const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: LabelProps) => {
+const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
   if (percent < 0.05) return null;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -28,7 +28,7 @@ export default function DiseaseDonut({ data, total }: { data: DiseaseItem[]; tot
             <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" labelLine={false} label={renderLabel}>
               {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
             </Pie>
-            <Tooltip contentStyle={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 13 }} formatter={(v: number) => [v.toLocaleString(), '']} />
+            <Tooltip contentStyle={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 13 }} formatter={(v: any) => [v.toLocaleString(), '']} />
           </PieChart>
         </ResponsiveContainer>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: -4 }}>

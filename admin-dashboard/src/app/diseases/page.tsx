@@ -18,8 +18,10 @@ export default function DiseasesPage() {
     async function load() {
       setLoading(true);
       const data = await fetchAdminStats();
-      setIsMock(data.total_scans <= 400);
-      setStats(data);
+      if (data) {
+        setIsMock(data.total_scans <= 400);
+        setStats(data);
+      }
       setLoading(false);
     }
     load();
@@ -106,7 +108,7 @@ export default function DiseasesPage() {
                 <PolarGrid stroke="rgba(0,0,0,0.08)" />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: '#64748b' }} />
                 <Radar name="Share %" dataKey="value" stroke="#3EB75A" fill="#3EB75A" fillOpacity={0.2} strokeWidth={2} />
-                <Tooltip contentStyle={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 13 }} formatter={(v: number) => [`${v}%`, 'Share']} />
+                <Tooltip contentStyle={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, fontSize: 13 }} formatter={(v: any) => [`${v}%`, 'Share']} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
