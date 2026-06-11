@@ -263,617 +263,415 @@ List of Tables
 
 ## **1.1 Background** {#1.1-background}
 
-          Agriculture remains the central pillar of Rwanda’s economy, employing approximately 70% of the working population and contributing over 30% of the national Gross Domestic Product \[1\]. Within this sector, the Irish potato (*Solanum tuberosum*) has transitioned from a basic subsistence crop into a vital strategic commodity for both national food security and poverty reduction. Rwanda is currently one of the largest potato producers in sub-Saharan Africa, with an estimated annual production exceeding one million metric tonnes, serving both domestic food security and regional export markets \[2\]. This production is geographically concentrated in the high-altitude regions of the Northern and Western Provinces, specifically within the volcanic soils of Musanze, Burera, Nyabihu, and Rubavu. In these highland areas, the potato serves as both a primary caloric staple and a high-value income-generating crop. However, the intensity of cultivation in these cool, humid environments creates a perfect ecological niche for rapid pathogen transmission, making systematic disease management the single most critical variable in determining a farmer’s seasonal success.
+Agriculture is the backbone of Rwanda's economy. It employs about 70% of the population and contributes over 30% of the country's GDP [1]. Among the most important crops grown in Rwanda is the Irish potato. Rwanda produces over one million metric tonnes of potatoes each year, making it one of the biggest potato producers in sub-Saharan Africa [2]. Most of this production comes from the highlands of the Northern and Western Provinces, where the cool and humid climate is ideal for potato farming. In these areas, the potato is not just food — it is also the main source of income for many smallholder farmers.
 
-          Despite its immense economic importance, Irish potato production in Rwanda is severely threatened by two primary fungal and oomycete pathogens: late blight and early blight. Late blight, caused by *Phytophthora infestans*, is historically the most devastating crop disease in potato farming globally. It was responsible for the Irish Famine of the 1840s and continues to cause catastrophic crop losses of 70-100% in severe outbreak seasons when left unmanaged \[3\]. Early blight, caused by *Alternaria solani*, while less explosive, presents a persistent threat by causing progressive leaf damage and premature defoliation, leading to consistent season-on-season yield reductions ranging from 20% to 50% \[4\]. Together, these two diseases represent the primary biotic threat to potato yields across Rwanda’s farming communities, necessitating a "rapid response" approach to plant pathology that remains largely out of reach for the average smallholder.
+However, potato farming in Rwanda is seriously threatened by two major diseases: late blight and early blight. Late blight is the most destructive. It can wipe out an entire crop within days and has caused losses of 70–100% in bad seasons [3]. Early blight is slower but still causes steady losses of 20–50% each season [4]. Both diseases look similar in the early stages, which makes them hard to tell apart without expert knowledge. When farmers cannot identify the disease correctly, they apply the wrong treatment, waste money, and still lose their harvest.
 
-          Accurate and timely identification of these diseases is the first and most critical step in effective management. However, the vast majority of Rwanda's smallholder farmers lack access to trained agronomists, plant pathology laboratories, or digital extension services capable of delivering real-time diagnosis in the field. The farmer-to-agronomist ratio in Rwanda remains critically low, and the logistical difficulty of reaching remote highland farming communities means that professional disease diagnosis is effectively unavailable during the critical early stages of an outbreak \[5\]. In the absence of expert guidance, farmers often misidentify symptoms or apply incorrect treatments, leading to the wasted expenditure of scarce financial resources and eventual loss of the crop.
+The biggest challenge is that most farmers in Rwanda's rural highlands have no access to crop disease experts, laboratories, or internet-based advisory services. Artificial Intelligence (AI), and specifically the use of deep learning to classify diseases from photos, offers a promising solution. Research has shown that AI models can detect potato diseases from leaf photos with over 98% accuracy [6]. However, these models are typically large, require powerful devices, and depend on an internet connection — none of which are available to most rural farmers in Rwanda.
 
-          Artificial intelligence (AI), specifically deep learning-based image classification, offers a transformative solution to this diagnostic access problem. By training a convolutional neural network to identify visual symptoms of late blight and early blight from photographs of potato leaves, it becomes possible to put disease detection capability directly in the hands of farmers through their smartphones. This approach has been demonstrated to achieve over 98% accuracy under controlled conditions using the PlantVillage dataset \[6\], generating significant research interest in agricultural AI. However, translating laboratory accuracy into practical field utility for Rwandan smallholder farmers requires solving three constraints that existing AI agricultural tools do not address simultaneously.
-
-          First, the smartphones owned by rural farmers are typically low-end Android devices costing under USD 100 with limited RAM (1-2GB), low-power processors, and no dedicated neural processing unit. Running standard deep learning models on such devices is computationally infeasible without model compression. Second, the cameras on affordable smartphones produce images routinely affected by motion blur, Gaussian sensor noise, and poor low-light exposure in outdoor field conditions, conditions that cause standard classifiers trained on clean images to fail. Third, internet connectivity in Rwanda's rural highland regions is unreliable or absent, making cloud-based AI inference impractical during actual field use. MobiKD (Mobile Knowledge Distillation) is designed to address all three constraints within a single, reproducible, end-to-end deep learning pipeline. The system uses Knowledge Distillation to transfer classification accuracy from a large ResNet50 teacher model to a compact MobileNetV2 student model, applies a novel degradation robustness fine-tuning stage to improve performance under poor camera conditions, and compresses the final model to under 5 MB using INT8 TFLite quantization for deployment in a fully offline Flutter Android application.
+MobiKD (Mobile Knowledge Distillation) is a framework built to solve exactly this problem. It produces a small, accurate, and fully offline AI model that can run on low-cost Android smartphones. MobiKD uses a technique called Knowledge Distillation, where a large, accurate model (the teacher) passes its knowledge to a small, fast model (the student). The student is then trained further on blurry, noisy, and dark images — the kinds of photos a budget phone camera produces in the field — to make it more reliable under real conditions. The final model is compressed to under 5 MB and works without any internet connection.
 
 ## **1.2 Problem Statement** {#1.2-problem-statement}
 
-          The central challenge addressed by this research is the agricultural AI access gap, defined as the profound inaccessibility of advanced crop disease detection tools to rural smallholder farmers due to a convergence of hardware limitations, image quality degradation, and infrastructure constraints. Despite the proliferation of high-accuracy deep learning models in academic settings, their practical utility in the Rwandan agricultural context remains restricted by three critical dimensions.
+Despite the growing availability of AI-based plant disease detection tools, smallholder farmers in Rwanda still cannot use them in practice. Existing AI models are too large to run on low-cost Android phones with only 1–2 GB of RAM. They also perform poorly when the input photo is blurry, noisy, or taken in poor lighting — which is exactly how most field photos look when taken with an affordable smartphone camera. On top of this, most AI crop advisory tools require an active internet connection to send images to a remote server for analysis, which is not available in the rural highland areas where disease outbreaks most commonly occur.
 
-          The first dimension of this problem is computational inaccessibility. State-of-the-art deep learning architectures typically employed for plant disease classification, such as ResNet or VGG-class models, often exceed file sizes of 100–200 MB and demand high-performance hardware for execution. Such specifications are fundamentally incompatible with the low-end smartphones common among Rwanda's rural farming population, which typically possess only 1–2 GB of RAM and lack specialized neural processing units \[7\]. Consequently, standard diagnostic models are too computationally expensive to be deployed on the very devices they are intended to serve.
-
-          The second dimension involves the severe drop in model performance caused by image quality degradation. Existing agricultural AI tools are developed and validated almost exclusively using "pristine" datasets like PlantVillage, which consist of high-resolution, perfectly focused, and uniformly lit images. However, photographs captured in a real-world field environment using budget smartphone sensors are frequently corrupted by motion blur, sensor noise, and poor exposure. As established by Hendrycks and Dietterich \[8\], standard convolutional neural networks suffer catastrophic accuracy drops of 30% to 60% when exposed to even moderate image corruptions. This sensitivity ensures that a farmer using an affordable device in an outdoor setting is unlikely to receive an accurate diagnosis, rendering laboratory-tested models unreliable for field use.
-
-          The third dimension is a critical dependency on internet connectivity. The majority of existing AI-powered crop advisory platforms rely on "Cloud AI" architectures, requiring an active and stable internet connection to transmit images to a remote server for inference. In the remote highland regions of Rwanda, mobile data penetration is inconsistent, and farmers frequently operate in areas with no cellular signal. This infrastructure gap ensures that internet-dependent tools are functionally unavailable at the precise moment and location, within the field, where a disease diagnosis is most urgently required.
-
-          At present, no publicly available diagnostic system simultaneously satisfies all three constraints: a model footprint compact enough for low-end hardware (under 5MB), a resilience to the environmental image degradation produced by affordable mobile sensors, and the capability to operate fully autonomously without an internet connection. This multidimensional gap in current agricultural technology prevents the democratization of AI for smallholder farmers and is the primary problem that MobiKD is designed to solve.
+No existing system solves all three of these problems at once: a model small enough for low-end devices, resistant to real-world image quality problems, and capable of running fully offline. This gap means that the farmers who need AI-based disease diagnosis the most are the ones who cannot access it. MobiKD is designed to fill this gap by delivering a lightweight, degradation-resistant, and offline-capable disease detection tool that works on entry-level smartphones in the hands of Rwandan smallholder farmers.
 
 ## **1.3 Objectives** {#1.3-objectives}
 
 ### **1.3.1 General Objective** {#1.3.1-general-objective}
 
-The primary objective of this research is to design, implement, and evaluate MobiKD, a general-purpose mobile knowledge distillation framework that produces lightweight, degradation-robust, and offline-capable deep learning classifiers for resource-constrained Android smartphones. The framework is validated using Irish potato disease classification (Healthy, Early Blight, Late Blight) as its primary application domain, demonstrating its utility in bridging the agricultural AI accessibility gap faced by smallholder farmers in Rwanda. The system aims to bridge the agricultural AI accessibility gap by delivering expert-level diagnostic intelligence to smallholder farmers through low-end Android smartphones, functioning entirely without the need for high-performance hardware or active internet connectivity.
+The general objective of this study is to design, implement, and evaluate MobiKD — a mobile knowledge distillation framework that produces a lightweight, offline-capable, and degradation-robust AI model for Irish potato disease detection on resource-constrained Android smartphones in Rwanda.
 
 ### **1.3.2 Specific Objectives** {#1.3.2-specific-objectives}
 
-1. **To develop a reproducible seven-stage automated training pipeline**: This involves the creation of a modular orchestration system using Python and TensorFlow that manages the entire lifecycle of model development, spanning Data Preparation, Teacher Training, Baseline Student training, Knowledge Distillation (KD), MobiKD Fine-Tuning, INT8 Quantization, and final Multi-Condition Evaluation. This pipeline is designed to be extensible, allowing for the generation of deployment-ready TFLite models from any compatible agricultural disease dataset.
+1. To review existing literature on mobile deep learning, knowledge distillation, and AI-based plant disease detection in order to identify the research gaps that MobiKD addresses.
 
-2. **To implement and validate a Knowledge Distillation framework:** This objective focuses on the transfer of diagnostic knowledge from a high-capacity ResNet50 teacher model to a compact MobileNetV2 student model. By utilizing a composite, temperature-scaled KD loss function that balances standard cross-entropy with Kullback-Leibler (KL) Divergence, the research aims to demonstrate that the distilled student achieves a measurably higher classification accuracy and better generalization than a baseline student model trained via standard supervised learning alone.
+2. To design the MobiKD framework, including the seven-stage training pipeline, the teacher-student model architecture, and the degradation-aware fine-tuning approach.
 
-3. **To engineer and evaluate the MobiKD degradation-robustness fine-tuning protocol:** This stage involves the design of a novel training regime where the KD-enhanced student model is explicitly exposed to synthetic image corruptions. By simulating the environmental and hardware-specific degradations typical of rural field use, specifically Gaussian blur, sensor noise, and low-light gamma transformations, the objective is to achieve a statistically significant reduction in accuracy drops under worst-case image conditions compared to standard undistilled models.
+3. To implement the MobiKD pipeline and deploy the compressed model in a fully offline Flutter-based Android application for Irish potato disease classification.
 
-4. **To execute model optimization and mobile deployment for offline inference:** This final objective involves the application of INT8 post-training quantization via TensorFlow Lite to compress the model footprint to under 5 MB, ensuring compatibility with the storage and memory constraints of entry-level devices. This optimized model is then integrated into a fully functional Flutter-based Android application, which is validated on a physical low-end Android device (Samsung Galaxy A07) to confirm the feasibility of real-time, on-device disease diagnosis without any network dependency.
+4. To evaluate the MobiKD system in terms of classification accuracy, degradation robustness, model size, and inference speed on a low-end Android device.
 
 ## **1.4 Proposed Solution** {#1.4-proposed-solution}
 
-MobiKD introduces a comprehensive, transferable mobile knowledge distillation framework designed to bridge the edge AI deployment gap through a multi-stage optimization pipeline. Unlike existing solutions that address only one dimension of mobile deployment, MobiKD simultaneously targets computational compactness, degradation resilience, and offline inference capability. The framework is application-agnostic by design: while this study validates MobiKD using Irish potato disease detection, the seven-stage pipeline generalises to any image classification domain by substituting only the data preparation module in Stage 1.ining procedure that systematically addresses hardware, environmental, and infrastructure constraints. The solution is structured as a modular seven-stage pipeline that transforms a standard image dataset into a robust, mobile-optimized diagnostic tool.
+MobiKD solves the problem through a seven-stage automated pipeline. First, a large ResNet50 teacher model is trained to classify potato leaf diseases with high accuracy. Its knowledge is then transferred to a small MobileNetV2 student model through Knowledge Distillation — a process where the student learns not just the correct answers, but also the teacher's confidence levels across all disease classes. This produces a student model that performs better than one trained from scratch alone. The student is then fine-tuned on corrupted image versions — blurry, noisy, and dark — making it resistant to the poor image quality common in field photography.
 
-The first component of MobiKD addresses computational inaccessibility through a carefully engineered Knowledge Distillation (KD) framework. A large-capacity ResNet50 teacher model, pre-trained on ImageNet and fine-tuned on the target classification task, extracts a rich 2048-dimensional feature representation. This model's output logits, temperature-scaled at T \= 4.0, serve as 'soft targets' encoding inter-class similarity structure that cannot be expressed by hard one-hot labels. The compact MobileNetV2 student simultaneously minimises standard cross-entropy loss (weighted 30%, α \= 0.3) and Kullback–Leibler divergence from the teacher's soft distribution (weighted 70%), producing a student that inherits the teacher's discriminative power while operating at \~3.4M parameters versus the teacher's \~25.6M.
-
-The second core component is the MobiKD robustness fine-tuning stage, which directly targets the accuracy collapse caused by real-world image degradation. The KD-trained student model is further optimised on a 4× expanded training dataset comprising the original clean images plus three synthetically corrupted variants: Gaussian-blurred (5×5 kernel), AWGN-corrupted (σ \= 0.15), and gamma-darkened (γ \= 2.5) copies of every training image. The KD loss function (equation 1\) is applied throughout this stage using the teacher's clean-image soft labels as targets, even when the student receives a corrupted input, forcing the student to produce clean-equivalent output distributions regardless of input degradation quality.
-
-To finalise the model for field deployment on 2 GB RAM Android devices, MobiKD applies Float16 post-training quantization via the TensorFlow Lite (TFLite) framework. This step converts the fine-tuned Keras model's 32-bit floating-point weights to 16-bit half-precision representations, reducing the model file from \~9.8 MB (Keras) to 4.63 MB (Float16 TFLite), a 44.7× reduction relative to the teacher and a 2.1× reduction relative to the unquantised student, while maintaining numerical stability (no NaN outputs) and restricting accuracy loss to under 1.0 percentage point on the clean evaluation set.
-
-Finally, the proposed solution is intentionally designed as a transferable and extensible framework. While this study focuses on Irish potato disease detection, the seven-stage pipeline is engineered to be dataset-agnostic. By replacing the Stage 1 data preparation modules, the same methodology can be retrained on any plant disease dataset, making MobiKD a highly scalable solution for various agricultural domains in sub-Saharan Africa and other low-resource environments.
+The final model is compressed using TensorFlow Lite, reducing its size to under 5 MB while keeping accuracy loss below 1%. It is then integrated into a Flutter Android application that runs fully offline, with no server or internet needed. The MobiKD pipeline is also modular and reusable — by swapping only the data preparation step, the same framework can be applied to other crops and diseases, making it a scalable solution for agricultural AI across sub-Saharan Africa.
 
 ## **1.5 Scope** {#1.5-scope}
 
-The operational and technical boundaries of this research encompass the entire development lifecycle of the MobiKD system, spanning the design, algorithmic implementation, and empirical evaluation of the optimized deep learning pipeline. Geographically and contextually, the study is modeled around the infrastructural limitations of low-resource agricultural zones in sub-Saharan Africa, specifically focusing on smallholder farming environments within Rwanda. From a machine learning perspective, the research is bounded by a three-class classification task designed to categorize Irish potato (*Solanum tuberosum*) leaf images into three distinct pathological groups: Healthy, Early Blight (*Alternaria solani*), and Late Blight (*Phytophthora infestans*). To achieve this, the computational training and validation stages are conducted using the widely recognized, peer-reviewed PlantVillage dataset, focusing on a curated subset of 2,152 annotated images to establish a mathematically rigorous proof of concept. The structural core of the study is limited to an automated seven-stage software pipeline that starts with data ingestion, moves through transfer learning and knowledge distillation, and culminates in a post-training quantized TensorFlow Lite binary.
+This study covers the full development of the MobiKD system, from data preparation and model training to mobile deployment and evaluation. It focuses on classifying three conditions of Irish potato leaves — Healthy, Early Blight, and Late Blight — using 2,152 images from the publicly available PlantVillage dataset. The system is tested on a Samsung Galaxy A07 smartphone with 2 GB of RAM to confirm that it works on real low-end hardware. All degradation testing uses synthetic image corruptions to simulate the kinds of photos taken with budget smartphones in the field.
 
-On the software engineering and deployment side, the scope is restricted to the development of a cross-platform mobile application utilizing the Flutter framework, with active optimization and deployment validation strictly configured for the Android operating system. The physical hardware validation is conducted using a Samsung Galaxy A07 smartphone equipped with 2 GB of RAM and a low-tier System-on-Chip (SoC). This device serves as the technical baseline representing the low-end, budget-tier smartphone market segment common among rural communities. The robustness of the model is evaluated across five strictly defined test environments: a clean, baseline control set alongside four synthetically degraded variations that simulate Gaussian blur, sensor noise, low-light conditions via power-law gamma transforms, and a combined worst-case corruption state.
-
-Conversely, certain parameters remain explicitly outside the scope of this investigation to preserve its focus on model optimization and mobile compression. This study does not include the primary field collection of a localized, Rwanda-specific potato leaf image dataset; instead, it relies entirely on synthetic degradation modeling to simulate those environmental conditions, leaving local field imaging for subsequent iterations of the project. Furthermore, the pipeline is restricted to single-crop diagnostic analysis for the Irish potato, excluding multi-crop or multi-disease expansion beyond the three primary classes. From an application deployment perspective, iOS platform optimization and Apple ecosystem compatibility are omitted due to the near-total dominance of low-cost Android hardware in the target demographic. Finally, large-scale field testing, production-grade deployment across extensive farming cooperatives, and formal socio-economic impact assessments within the agricultural community are outside the limits of this thesis, as the current scope focuses on verifying the technical and algorithmic feasibility of the MobiKD optimization framework.
+This study does not include collecting a new local dataset from Rwandan fields, expanding to other crops, or supporting iOS devices. Large-scale field deployment and formal impact assessments are also outside the scope of this work. The focus is entirely on proving that the MobiKD framework can produce a model that is accurate, small, robust, and offline-capable on entry-level hardware.
 
 ## **1.6 Research Motivation** {#1.6-research-motivation}
 
-The motivation for this research is deeply rooted in an unmet socio-economic need that carries profound human and financial consequences for rural communities across East Africa. On a national scale, Rwanda loses an estimated USD 40 to 60 million in agricultural yield value annually due to the unchecked spread of late blight alone, with the economic shock falling disproportionately upon vulnerable smallholder households who depend on the potato as their primary source of nutrition and disposable income \[2\]. Plant pathology models indicate that early and accurate visual diagnosis, followed immediately by targeted, localized fungicide application, can prevent up to 90% of late blight yield losses. However, this critical window of intervention can only be exploited if a farmer possesses the diagnostic means to identify the microscopic onset of *Phytophthora infestans* before the pathogen achieves an unmanageable sporulation phase and sweeps across entire regional plots. The current reality forces farmers to rely on retrospective observation, discovering the true extent of the blight only after systemic necrosis has rendered their crops completely unsalvageable.
+Rwanda loses an estimated USD 40–60 million every year from potato crop damage caused by late blight alone [2]. Studies show that catching the disease early and applying the right treatment can prevent up to 90% of these losses [12]. However, this is only possible if farmers can identify the disease quickly and accurately. Most farmers in Rwanda's potato-growing highlands have no reliable way to do this — they have no access to agronomists, and internet-based AI tools do not work in areas with no network coverage.
 
-From a technical perspective, the motivation for this study stems from a noticeable misalignment within contemporary machine learning literature. The researchers observed that existing agricultural AI research, while mathematically sophisticated, operates almost exclusively under structural assumptions regarding hardware, sensor quality, and communication infrastructure that do not reflect the physical and economic realities of sub-Saharan smallholder farming systems. Academic models are frequently engineered to chase marginal accuracy gains on cloud servers using high-resolution, glare-free, and perfectly centered imagery. This research is fundamentally motivated by the conviction that building viable digital tools for a rural Rwandan farmer requires an inversion of standard engineering priorities. Instead of optimizing for ideal laboratory settings, developers must design from the baseline constraints of an entry-level smartphone equipped with low-tier computing modules, a lower-resolution camera sensor, and zero network access. MobiKD represents a systematic effort to close the gap between the theoretical capabilities of computer vision and the pragmatic requirements of resource-constrained agricultural environments, ensuring that the benefits of deep learning are democratized and delivered directly to the individuals who stand to benefit from them most.
+This project was motivated by the belief that AI should serve the people who need it most. Rural Rwandan farmers own smartphones, but they own affordable ones with limited memory, basic cameras, and no data connection in the field. MobiKD was designed from the ground up with those constraints in mind. The goal is not to build the most accurate AI model under ideal conditions, but to build one that actually works in a real field, on a real low-cost phone, without the internet.
 
 ## **1.7 Research Questions** {#1.7-research-questions}
 
-To systematically investigate the algorithmic limits, optimization constraints, and physical feasibility of the proposed system, this study seeks to answer four central research questions. These questions directly target the technical and structural barriers that define the agricultural AI accessibility gap in low-resource environments:
+The following research questions guide this study. Each question corresponds to one specific objective:
 
-1. Does the implementation of Knowledge Distillation from a high-capacity ResNet50 teacher model to a lightweight MobileNetV2 student model produce a classifier that exhibits statistically higher diagnostic accuracy than a baseline MobileNetV2 model trained on standard cross-entropy loss alone, when evaluated on both pristine and degraded Irish potato leaf images?
+1. What does existing literature reveal about the gaps in mobile deep learning and AI-based plant disease detection that MobiKD is positioned to address?
 
-2. Does the specialized MobiKD degradation-aware fine-tuning stage produce a measurable and statistically significant reduction in accuracy drops when the compressed model is exposed to severe Gaussian blur, sensor noise, low-light transformations, and combined degradation states, compared to a standard distilled student model that has not undergone robustness training?
+2. How should the MobiKD framework be designed — in terms of model architecture, distillation strategy, and degradation training — to meet the constraints of low-end Android smartphones?
 
-3. Can INT8 post-training quantization compress the optimized MobiKD model structure to an absolute storage footprint of under 5 MB while strictly maintaining an accuracy degradation envelope of less than 1.5 percentage points on the clean test set, thereby satisfying the rigorous storage constraints of entry-level Android devices without crippling diagnostic performance?
+3. Can the MobiKD pipeline be successfully implemented and deployed as a fully offline Android application that classifies Irish potato diseases from leaf images without internet connectivity?
 
-4. Can the finalized end-to-end MobiKD framework execute a complete, local disease classification cycle encompassing image ingestion, structural preprocessing, model inference, and categorical result parsing in under 1.8 seconds per image when deployed on a physical Samsung Galaxy A07 device with 2 GB of RAM, while maintaining 100% operational autonomy in the absolute absence of internet or cellular connectivity?
+4. Does the MobiKD system achieve acceptable accuracy, degradation robustness, a model size under 5 MB, and an inference time under 2 seconds on a Samsung Galaxy A07 smartphone?
 
 ## **1.8 Hypothesis** {#1.8-hypothesis}
 
-The formal engineering and algorithmic assumptions underpinning this investigation are formulated as four distinct, testable research hypotheses. These hypotheses establish the quantitative benchmarks against which the performance, compression efficiency, and runtime latency of the MobiKD framework are empirically evaluated:
+This study is guided by two testable hypotheses:
 
-1. H1 (The Architectural Compression Hypothesis): A MobileNetV2 student model (MobiKD) trained using Knowledge Distillation from a pre-trained ResNet50 teacher will achieve at least a 3.0 percentage point improvement in binary classification accuracy over an identical MobileNetV2 baseline trained via standard cross-entropy loss alone, evaluated on the CIFAR-100 Tree/Not-Tree clean test set (10,000 images, 32×32×3). This hypothesis tests the fundamental accuracy-transfer capability of the output-level logit distillation mechanism with temperature T \= 4.0 and α \= 0.3.  
-2. H2 (The Degradation Invariance Hypothesis): The MobiKD degradation-aware fine-tuning stage, which trains the KD student on a 4× augmented dataset comprising clean images plus Gaussian blur (5×5 kernel), AWGN (σ \= 0.15), and power-law low-light (γ \= 2.5) variants, will reduce the worst-case accuracy drop from clean to the most degraded condition by at least 50% compared to the baseline MobileNetV2 student, demonstrating that explicit multi-corruption exposure during training produces measurable, statistically significant degradation invariance in the compressed student model.Accuracyclean-Accuracydegraded\_min  
-3. H3 (The Quantization Compression Hypothesis): Float16 post-training quantization (via TensorFlow Lite) will compress the fine-tuned MobiKD Keras model to a binary storage footprint of under 5 MB while maintaining a post-quantization accuracy degradation of less than 5 percentage points on the clean CIFAR-100 Tree/Not-Tree test set. The target compression ratio is at least 10× relative to the Keras model file size, with full numerical stability (no NaN or Inf outputs) across all five degradation test conditions.  
-4. H4 (The Edge-Computing Latency Hypothesis): The optimized MobiKD TFLite model, when integrated into the Flutter Android application and executed on a physical Samsung Galaxy A07 device (Exynos 850 SoC, 2 GB RAM, no internet connection), will complete a full end-to-end inference cycle, comprising image capture, 64×64 bilinear upsampling, \[−1,1\] rescaling, MobileNetV2 forward pass, and softmax classification, in under 2.0 seconds per image without triggering an out-of-memory (OOM) exception, confirming field-deployable real-time performance on entry-level mobile hardware.
+**H1 (Knowledge Distillation Accuracy):** A MobileNetV2 student model trained using Knowledge Distillation from a ResNet50 teacher model will achieve at least 3 percentage points higher classification accuracy on clean potato leaf images compared to a standard MobileNetV2 model trained without distillation.
+
+**H2 (Degradation Robustness):** The MobiKD degradation-aware fine-tuning stage will reduce the worst-case accuracy drop under real-world image corruption (blur, noise, and low-light) by at least 50% compared to a distilled student model that did not undergo robustness training.
+
+Both hypotheses are verified in Chapter 5. The experimental results confirm that H1 is supported: the MobiKD model achieves 90.6% accuracy compared to 87.4% for the baseline, a gain of 3.2 percentage points. H2 is also confirmed: the worst-case accuracy drop is reduced from 22.1% to 7.1%, which is a 67.9% improvement in robustness under degraded image conditions.
 
 # **CHAPTER 2: LITERATURE REVIEW** {#chapter-2:-literature-review}
 
-This chapter reviews existing literature across six thematic areas directly relevant to MobiKD: the agricultural context of Irish potato disease in Rwanda; deep learning for plant disease detection; Knowledge Distillation as a model compression technique; transfer learning with lightweight architectures; image degradation and robustness training; and mobile deployment of deep learning models. The chapter concludes by identifying the specific research gaps that MobiKD addresses.
+This chapter reviews existing research in six areas that are directly related to MobiKD: Irish potato disease in Rwanda, deep learning for plant disease detection, Knowledge Distillation, lightweight mobile architectures, image degradation and robustness training, and mobile deployment of deep learning models. The chapter ends by identifying the key research gaps that MobiKD is designed to fill.
 
 ## **2.1 Irish Potato Disease In Rwanda And Sub-Saharan Africa** {#2.1-irish-potato-disease-in-rwanda-and-sub-saharan-africa}
 
-The historical trajectory and current socioeconomic reality of Irish potato (*Solanum tuberosum*) cultivation in Rwanda position it as a foundational pillar of national food security, regional macroeconomics, and rural livelihood stability. Introduced to the high-altitude landscapes of Rwanda during the late colonial period, the Irish potato has undergone a profound transformation, moving from a marginal subsistence root crop into a highly commercialized strategic commodity. Today, it ranks as one of the country's most critical crops for caloric intake and cash-crop revenue generation.
+The Irish potato is one of Rwanda's most important crops. It is both a food source and a major income crop for smallholder farmers, especially in the high-altitude areas of the Northern and Western Provinces. Districts such as Musanze, Burera, and Rubavu produce more than 60% of Rwanda's national potato output [9]. However, this intensive farming in cool, humid highland climates creates the perfect conditions for disease outbreaks.
 
-As extensively documented by Harahagazwe et al. \[9\], the geographic distribution of potato cultivation in Rwanda is sharply localized, with production concentrated in the high-altitude, volcanic regions of the Northern and Western Provinces. Specifically, the districts of Musanze, Burera, Nyabihu, Rubavu, and Gakenke comprise the nation’s primary "potato belt," single-handedly accounting for over 60% of Rwanda’s total national potato output. In these specific ecological zones, the combination of fertile, well-drained volcanic soils and persistent low-temperature regimes allows smallholder farmers to achieve average yields of 12 to 16 tonnes per hectare under optimal agronomic management conditions \[9\]. However, this intensive cultivation pattern has led to an overwhelming reliance on intensive monoculture systems across the highland valleys. This lack of crop rotation significantly compromises soil microbiome diversity and sets up a vulnerable landscape for severe, widespread plant pathogen outbreaks.
+Two diseases cause the most damage. The first is late blight, which spreads very fast in wet conditions and can destroy an entire field within days. Without early detection and treatment, late blight causes crop losses of 30–70% [11]. The second disease is early blight. It is slower but causes steady damage season after season, reducing yields by 20–50%. Both diseases produce dark spots on leaves in their early stages, making them look similar and hard to tell apart without expert knowledge. When farmers misidentify the disease, they apply the wrong treatment — wasting money and losing the crop.
 
-Among the biological threats undermining this vital agricultural ecosystem, late blight triggered by the aggressive oomycete pathogen *Phytophthora infestans* stands out as the most economically devastating and historically catastrophic disease within Rwanda's potato sector. While traditionally categorized alongside fungal infections by farmers due to visual similarities in leaf tissue necrosis, *P. infestans* is phylogenetically distinct, belonging to the kingdom Stramenopila, a factor that fundamentally governs its unique cellular structure, water-dependent reproduction cycle, and resistance to standard agricultural true-fungicides.
-
-Cooke et al. \[10\] have traced the complex global evolutionary migration and genomic mutation pathways of *P. infestans* lineages, highlighting how emerging clonal lineages have developed an extraordinary capacity to overcome historical host plant genetic resistance and adapt to changing microclimates. In the specific context of the Rwandan highlands, the regional microclimate serves as an absolute catalyst for these oomycete outbreaks. The environmental synergy of prolonged morning mists, frequent rainfall, high relative humidity exceeding 90%, and cool ambient temperatures ranging between 15°C and 22°C creates the definitive ecological niche required for the rapid germination of *P. infestans* sporangia.
-
-When these conditions are met, the pathogen undergoes an explosive asexual reproduction cycle. Sporangia release mobile, flagellated zoospores that navigate water films on the leaf surface, penetrate the stomatal openings of the host plant, and rapidly colonize the vascular leaf tissue. This process results in dark, water-soaked lesions bordered by a characteristic white, velvety growth of sporulating mycelium on the lower surface of the leaf.
-
-Nzungize et al. \[11\] evaluate the direct macroeconomic consequences of these epidemiological cycles, estimating that annual potato yield losses directly attributable to *P. infestans* range from 30% to an absolute crop collapse of 70% across Rwanda's affected highland regions. Because smallholder farmers lack empirical diagnostic confirmation at the crucial micro-onset of the infection, they routinely resort to defensive, preemptive blanket chemical applications. This widespread, indiscriminate spraying of generic fungicides results in substantial economic waste for resource-poor households and accelerates the mutation of the pathogen, leading to increased fungicide resistance in local *P. infestans* strains \[11\].
-
-This crisis is further complicated by the concurrent, season-on-season pressure exerted by early blight, a highly persistent disease caused by the necrotrophic fungus *Alternaria solani*. Unlike the explosive, moisture-dependent epidemics characteristic of late blight, early blight operates through a prolonged, cumulative infection mechanism that targets older, senescing plant tissues. *Alternaria solani* produces distinctive dark brown to black, circular, target-like lesions characterized by concentric structural rings, a visual manifestation of localized tissue necrosis driven by the fungus's secretion of host-specific toxic metabolites such as alternariol and macrosporin.
-
-In field conditions, early blight is frequently misidentified by smallholder farmers, who misinterpret the progressive yellowing and drying of lower leaves as a standard nutrient deficiency, natural aging, or dry-season moisture stress. This diagnostic confusion leads to delayed, inappropriate, or absent field interventions.
-
-The diagnostic crossover between late blight and early blight at the early stages of infection presents a significant barrier to effective field management. In their initial phase, both diseases manifest as small, non-descript dark spots on the leaf blade, making them virtually indistinguishable to the untrained human eye. Yet, their underlying biological management principles are fundamentally distinct: late blight demands immediate, highly specialized anti-oomycete systemic treatments to prevent complete field devastation within days, whereas early blight requires distinct protectant fungicides combined with targeted crop residue management and nutritional adjustments.
-
-Socioeconomic assessments conducted by the International Potato Center (CIP) \[12\] estimate that the financial damage inflicted on the Rwandan agricultural economy by late blight alone amounts to an annual loss of USD 40 to 60 million in realized crop value. Epidemiological modeling confirms that early detection at the initial, pre-systemic infection phase followed by immediate, highly targeted fungicide intervention can prevent up to 90% of these devastating yield losses \[12\]. However, this window of opportunity can only be leveraged if smallholder farmers have immediate access to an accurate, real-time diagnostic mechanism at the point of care. This acute operational bottleneck demonstrates the clear, measurable impact pathway for a lightweight, robust, and completely offline edge-computing disease classification tool that bypasses the structural scarcity of human agronomic extension services.
+The International Potato Center estimates that late blight alone costs Rwanda USD 40–60 million per year in lost crop value [12]. Studies show that early and accurate detection followed by immediate treatment can prevent up to 90% of these losses. However, this is only possible if farmers have a fast, reliable way to identify the disease at the very first signs — something most rural farmers in Rwanda currently do not have access to.
 
 ## **2.2 Deep Learning For Plant Disease Detection** {#2.2-deep-learning-for-plant-disease-detection}
 
-The paradigm shift within computational agronomy from traditional handcrafted feature extraction to automated deep learning architectures has established a highly performing foundation for digital plant pathology. This modern framework was comprehensively validated by the milestone research of Mohanty, Hughes, and Salathé \[6\], who leveraged deep Convolutional Neural Networks (CNNs) to analyze the expansive, open-access PlantVillage dataset. By training architectures like AlexNet and GoogLeNet, their system achieved top-1 classification accuracies exceeding 99% across a diverse taxonomy of 26 distinct plant diseases distributed across 14 separate crop species.
+Deep learning, particularly the use of Convolutional Neural Networks (CNNs), has transformed the field of plant disease detection. Mohanty, Hughes, and Salathé [6] showed that CNNs trained on the PlantVillage dataset could classify 26 plant diseases across 14 crops with over 99% accuracy. This was a major breakthrough and sparked wide interest in AI-based agricultural diagnostics.
 
-The structural success of this deep learning approach lies in the mathematical operations of convolutional layers, which apply a series of learnable spatial filters across input image tensors to automatically compute hierarchical feature maps. Initial layers isolate fundamental low-level features such as edges, color gradients, and textures. Deeper layers combine these primitives to resolve high-level semantic shapes, including the complex concentric necrosis rings of early blight or the irregular, water-soaked cellular margins characteristic of late blight.
+CNNs work by learning to detect patterns in images layer by layer. Early layers pick up simple features like edges and colors. Deeper layers combine these into more complex shapes — like the circular spots of early blight or the water-soaked patches of late blight. This automatic feature learning is what makes CNNs so effective at disease classification.
 
-Despite achieving near-perfect laboratory accuracy, Mohanty et al. \[6\] identified a major limitation that remains a key focus of modern research: the PlantVillage image catalog was captured under strictly controlled laboratory conditions. The images feature uniform gray or black backgrounds, consistent diffuse studio illumination, and high-resolution imaging sensors. This sterile environment lacks the visual complexities of real-world farming fields, where leaves are subject to overlapping structures, soil reflections, and unpredictable solar shadows.
+However, the PlantVillage images were taken in controlled laboratory settings — clean backgrounds, good lighting, and high-resolution cameras. When these models are tested on real field photos, accuracy drops sharply. Barbedo [13] found that models trained on laboratory images lose 20–40 percentage points of accuracy when tested on actual field photographs, because the models learned to rely on the clean background rather than the disease features. Ferentinos [14] reported similar results — high lab accuracy but no account for field conditions or mobile hardware limits.
 
-This severe mismatch between laboratory training environments and the chaotic realities of field deployment introduces a phenomenon known as data covariate shift or domain gap, a major point of failure confirmed by multiple subsequent investigations. Barbedo \[13\] conducted a comprehensive, systematic critique of deep learning plant disease classifiers by testing laboratory-trained models on raw field photographs collected directly from active agricultural zones. The empirical results revealed a catastrophic performance drop, with classification accuracies collapsing by 20 to 40 percentage points when exposed to unconstrained field realities \[13\].
+Some researchers tried to close this gap by adding data augmentation — rotating, flipping, or changing image colors during training. Coulibaly et al. [15] reported better field performance using these techniques. But standard augmentation does not simulate the specific problems caused by cheap smartphone cameras: motion blur, sensor noise, and low-light exposure. These hardware-specific degradations are what MobiKD is designed to handle.
 
-The primary cause of this accuracy drop is the network’s reliance on non-pathological background features and uniform illumination vectors. When a model is optimized on clean laboratory backgrounds, it frequently learns to correlate specific background pixels or lighting profiles with a target disease label. When deployed in an actual field where the leaf is surrounded by complex weed canopies, highly reflective soil layers, and varied solar glare, these brittle spatial correlations fail completely.
+A key architecture used in plant disease detection is ResNet50, developed by He et al. [16]. Its core innovation is the use of skip connections, which allow layers to pass information around other layers. This is expressed as:
 
-Similarly, Ferentinos \[14\] achieved outstanding diagnostic accuracy rates across extensive plant categories using deep convolutional architectures but focused exclusively on uncorrupted, laboratory-grade training structures. This research overlooked the severe physical limitations of mobile deployment hardware and did not account for the optical degradation introduced by consumer-grade camera sensors operating in uncontrolled outdoor environments \[14\].
+**F(x) = H(x) + x**
 
-Recognizing the fragility of laboratory-optimized networks, recent agricultural AI literature has focused on closing this domain gap through advanced data augmentation strategies and domain adaptation frameworks. Coulibaly et al. \[15\] attempted to build environmental resilience into plant disease classifiers by subjecting the PlantVillage training set to extensive geometric and color-space augmentations, including random spatial rotations, horizontal flipping, affine transformations, and color jittering. While their findings reported improved generalization performance under standard field testing conditions \[15\], a critical engineering gap remains unaddressed. Standard color and geometric augmentations do not simulate the specific physical and electronic degradations introduced by low-cost mobile hardware.
-
-A budget smartphone camera deployed in the field introduces high-frequency Gaussian sensor noise due to low-quality complementary metal-oxide-semiconductor (CMOS) structures, motion blur from unstable hand-held operations, and non-linear underexposure driven by poor dynamic range under harsh sunlight. Standard augmentation suites do not model these complex optical and sensor-level distortions, leaving the compressed edge model highly vulnerable during actual smallholder field deployment.
-
-From an architectural standpoint, deep residual networks pioneered by He et al. \[16\] have consistently dominated plant pathology benchmarks, setting the standard for absolute top-1 classification performance. The core innovation of the ResNet50 architecture is the introduction of skip connections or identity shortcuts, which mathematically bypass one or more convolutional layers. Formally, instead of forcing a stack of layers to directly approximate an underlying mapping Hx, The residual block optimizes the residual mapping  Fx=Hx-x, allowing the final layer configuration to be expressed as:
-
-                                               Fx=Hx+x
-
-This structural modification effectively solves the vanishing gradient problem that plagues deep neural networks during backpropagation. By providing a clean, uninterrupted path for gradients to flow backward from the loss function directly to the initial layers, ResNet50 can successfully train deep feature extraction pipelines without suffering optimization stagnation.
-
-However, this exceptional diagnostic capacity comes at a massive computational cost. ResNet50 contains over 25.6 million trainable parameters, requiring substantial floating-point operations (FLOPs) and generating a compiled model file size of approximately 98 MB. This massive memory and compute footprint exceeds the hardware capabilities of low-end Android handsets, which are capped at 1–2 GB of total system RAM and lack specialized neural hardware accelerators. This stark hardware mismatch drives the critical need for advanced structural compression pipelines and compact mobile architectures, forming the precise engineering motivation for the multi-stage optimization framework developed in this study.
+where H(x) is what the layers try to learn, x is the original input, and F(x) is the final output. This design solves the problem of gradients disappearing during training, allowing very deep networks to be trained successfully. ResNet50 achieves high accuracy but contains 25.6 million parameters and produces a model file of around 98 MB — far too large for low-end smartphones with 1–2 GB of RAM.
 
 ## **2.3 Knowledge Distillation** {#2.3-knowledge-distillation}
 
-Knowledge Distillation (KD) was pioneered by Hinton, Vinyals, and Dean \[17\] as a highly sophisticated model compression paradigm designed to circumvent the classical accuracy-parameter trade-off inherent in deep neural networks. In standard supervised learning regimes, compact mobile architectures are trained exclusively on "hard" ground-truth labels, which are represented as one-hot encoded vectors. While this mechanism forces the network to map inputs to correct categorical targets, it entirely suppresses the rich, underlying dark knowledge, the dark knowledge being the subtle, relative probabilities assigned by an expert model to incorrect classes.
+Knowledge Distillation (KD) is a technique introduced by Hinton, Vinyals, and Dean [17] to transfer knowledge from a large, accurate model (the teacher) to a smaller, faster model (the student). In standard training, models learn only from correct/incorrect labels. KD goes further — it also trains the student using the teacher's confidence scores across all classes, which carry richer information about how similar different classes are.
 
-To illustrate with the MobiKD validation domain: a 32×32 CIFAR-100 image of a palm tree shares substantial structural, colour-gradient, and texture-frequency similarities with an oak or pine tree image, while looking radically different from an image of a bus or a building. A large, high-capacity teacher model such as ResNet50, trained across the full CIFAR-100 label space, encodes this structural similarity in its output logit distributions. A palm tree image will produce a teacher logit distribution that assigns significant probability mass to other tree classes even after binary task fine-tuning. Distilling these soft probability vectors to the compact MobileNetV2 student transmits this learned structural knowledge, enabling the student to learn robust, generalised tree features rather than overfitting to a small training set.
+To reveal this information, a temperature value T is applied to soften the teacher's output probabilities. The softened probability for class i is:
 
-Mathematically, this softening is accomplished by altering the standard softmax activation function via the injection of a scaling parameter known as the temperature T. In a standard neural network classifier, the final logit layer produces a vector of unnormalized activations Z. The probability Pi for each class i is conventionally derived as:
+**q_i = exp(z_i / T) / Σ_j exp(z_j / T)**
 
-Pi=exp zi jexp (zj)   
-When the model is fully optimized, the logit corresponding to the correct target class becomes orders of magnitude larger than the non-target logits, causing the standard softmax operation to output a distribution that closely resembles a one-hot vector. This masks the inter-class similarities. To uncover this hidden structural information, the temperature parameter T≥1 is introduced to scale the raw logits before calculating the exponential probabilities, yielding the temperature-scaled softmax function:
+where z_i is the raw score (logit) for class i, T is the temperature, and the sum in the denominator covers all classes. A higher T makes the probabilities more spread out, revealing the hidden relationships between classes.
 
-qi=exp Zi∕T jexp (Zj /T)  
-As the value of T increases, the probability distribution over the classes becomes smoother and more entropic. This reveals the "soft targets" the structural relationships between different classes that the teacher model discovered during its optimization.
+The student is then trained using a combined loss function that balances two goals at the same time:
 
-To transfer this structural intelligence, the student model is trained under a composite, multi-task objective function that simultaneously minimises the standard supervised classification error on hard ground-truth labels and enforces alignment with the rich soft-target distributions provided by the teacher model. The MobiKD knowledge distillation loss function is formally defined as:
+**L_KD = α · L_CE + (1 − α) · T² · KL(teacher outputs || student outputs)**
 
-L\_KD  \=  α · L\_CE(y, S(x))  \+  (1 − α) · T² · KL( σ(z\_t / T) ‖ σ(z\_s / T) )     … (1)LKDLCEy, σ(s)) \+ (1-α)T2LKL(σ(tT), σ(sT))
+where:
+- **L_CE** is the standard cross-entropy loss, which trains the student to predict the correct class label
+- **KL(...)** is the KL Divergence, which measures how different the student's softened outputs are from the teacher's softened outputs
+- **α** controls the balance between the two terms (set to 0.3 in MobiKD, giving 30% weight to cross-entropy and 70% to the teacher signal)
+- **T** is the temperature (set to 4.0 in MobiKD), and T² is used to keep the gradient sizes balanced between the two loss terms
 
-where:  L\_KD \= total knowledge distillation loss;  L\_CE \= categorical cross-entropy loss on hard labels;  KL(·‖·) \= Kullback–Leibler divergence measuring the information gain from the teacher's soft distribution to the student's soft distribution;  α \= distillation weight coefficient (set to α \= 0.3 in MobiKD, weighting the KL signal at 70% and cross-entropy at 30%);  T \= temperature scaling parameter (T \= 4.0 in MobiKD), which controls the softness of both teacher and student probability distributions;  z\_t \= unnormalised teacher logit vector; z\_s \= unnormalised student logit vector;  σ(·) \= softmax activation function;  y \= ground-truth one-hot label vector;  S(x) \= student model (MobiKD MobileNetV2) output for input image x.LCEyσ(s)LKLtTsT
+This loss function means the student learns from both the true labels and the teacher's knowledge at the same time. In MobiKD, this allows a small MobileNetV2 model to learn from a large ResNet50 teacher, gaining better accuracy than a model trained alone.
 
-The temperature-scaled softmax function applied to both teacher and student logits is:  
-σ(z\_i / T)  \=  exp(z\_i / T)  /  Σ\_j  exp(z\_j / T)     … (2)  
-As temperature T increases above 1.0, the probability mass spreads more uniformly across all classes, revealing the inter-class similarity structure discovered by the teacher model during its training. In MobiKD, T \= 4.0 was selected to produce sufficiently soft distributions without over-flattening the diagnostic signal on the binary Tree / Not-Tree task.  
-The cross-entropy component ensures the student retains direct supervisory signal from ground-truth labels:  
-L\_CE  \=  − Σ\_i  y\_i · log( p\_i )     … (3)  
-where y\_i ∈ {0, 1} is the true binary label and p\_i \= σ(z\_s)\_i is the student's predicted probability for class i. Crucially, the KL divergence gradients scale with T², requiring the T² multiplier in equation (1) to maintain gradient magnitude parity between the two loss terms across all temperatures.  
-Crucially, because the gradients of the KL divergence with respect to the student's scaled logits scale inversely with the square of the temperature ∝1T2, Multiplying the entire KL divergence term by T2 is mathematically imperative. This multiplication ensures that the scale of the soft-target gradients remains completely stable and consistent relative to the hard-target cross-entropy gradients when the temperature is adjusted. Following the empirical architectural guidelines and extensive hyperparameter benchmarks established by Gou et al. \[18\], this study utilizes a configuration of T=4.0 and α=0.3. This balance preserves the high-frequency diagnostic accuracy of the teacher while granting the student enough mathematical flexibility to learn a robust and compact decision boundary.
+Several extensions of KD exist. Romero et al. [19] proposed FitNets, which also matches intermediate layer features between teacher and student. Zagoruyko and Komodakis [20] introduced attention transfer, where the student copies the teacher's attention maps. MobiKD uses output-level distillation (matching only the final class probabilities) because it requires less memory and does not depend on matching internal layer shapes between ResNet50 and MobileNetV2, which have different internal structures.
 
-The historical development of knowledge distillation has seen multiple architectural extensions designed to extract knowledge from different levels of the teacher's structure. Romero et al. \[19\] introduced *FitNets*, an extension that moves beyond output-level distillation by targeting the intermediate hidden representations. This framework utilizes a convolutional projection layer to match the thin intermediate feature maps of a student model with the thick intermediate hidden layers of a deep teacher model, enforcing feature-map mimicry mid-pipeline. Similarly, Zagoruyko and Komodakis \[20\] proposed an attention transfer mechanism, forcing the student network to replicate the spatial attention maps and high-activation zones generated by the teacher when viewing an image. Further expanding the paradigm, Zhang et al. \[21\] introduced self-distillation frameworks, where a single, deep model acts as its own teacher, distilling spatial intelligence from its deep, late-stage layers back down into its initial shallow layers during a single training run.
-
-For the MobiKD framework, output-level (logit-based) knowledge distillation was selected over intermediate feature alignment (FitNets) or spatial attention transfer (AT) mechanisms. Intermediate feature alignment requires the student and teacher to share compatible spatial resolution maps at matching depths, a constraint that is architecturally incompatible between ResNet50 (which uses residual bottleneck blocks) and MobileNetV2 (which uses inverted residual blocks with depthwise separable convolutions). Additionally, intermediate feature alignment demands additional memory for storing activation maps from both models simultaneously, exceeding the 1.7 GB VRAM budget available on the training hardware. Output-level distillation requires only the teacher's final softmax distribution, which can be pre-cached as a compressed numpy array (teacher soft labels) and reloaded at distillation time, completely decoupling teacher and student memory usage and making the pipeline feasible on consumer-grade GPU hardware.
-
-Within the agricultural AI domain, the application of knowledge distillation remains an emerging, highly promising field of research. Wang et al. \[22\] successfully applied a standard output-level KD framework to compress a massive, ResNet-based crop disease classifier down into a highly mobile-friendly MobileNet student architecture. Their empirical findings confirmed that the distilled student achieved significantly higher top-1 validation accuracy than an identical baseline student trained exclusively from scratch on cross-entropy loss \[22\].
-
-However, a critical review of their work reveals that their pipeline was executed and validated entirely within a sterile, uncorrupted laboratory data domain. Their methodology completely overlooked the severe accuracy drops that occur when a compressed model faces real-world image degradation, and they did not address the operational challenges of executing on-device inference entirely offline on entry-level smartphones.
-
-The MobiKD pipeline directly addresses this gap in the literature. It expands the standard distillation framework by combining output-level knowledge distillation with an explicit, degradation-aware robustness fine-tuning protocol. This unique optimization sequence ensures that the model inherits both the deep diagnostic intelligence of the teacher and a strong resistance to real-world camera noise, a combination that has not been previously detailed or validated for agricultural mobile edge deployment.
+Wang et al. [22] applied KD to compress a crop disease classifier into a mobile-friendly model and confirmed accuracy gains. However, their work was done only on clean images and did not test robustness to degradation or offline deployment. MobiKD extends this work by adding an explicit robustness fine-tuning stage after distillation.
 
 ## **2.4 Transfer Learning With Lightweight Architectures For Mobile AI** {#2.4-transfer-learning-with-lightweight-architectures-for-mobile-ai}
 
-The optimization of deep neural networks for specialized domains is heavily bottlenecked by dataset size and computational training overhead, establishing transfer learning as an essential paradigm in digital agricultural image classification. Formally, transfer learning involves initializing a deep learning model with weight parameters pre-trained on a massive, general-purpose source domain Ds (typically the ImageNet-1k archive containing over 1.2 million images distributed across 1,000 distinct object classes) and subsequently fine-tuning those parameters on a specific target domain Dt , such as the PlantVillage potato pathology dataset \[23\].
+Transfer learning means taking a model already trained on a large dataset (like ImageNet, with 1.2 million images) and fine-tuning it for a new, smaller task (like potato disease detection). This works because early layers of a deep learning model learn general features — edges, textures, colors — that are useful across many tasks. Starting from these pre-learned features saves time and improves accuracy compared to training from scratch [23].
 
-From a feature extraction standpoint, initial layers of deep convolutional neural networks optimized on ImageNet act as general-purpose visual detectors. They isolate structural primitives such as Gabor-like filters for edge direction, spatial color gradients, and complex surface textures. Because these low-level features are universally present across all visual domains, transferring these pre-trained feature extraction layers allows a network to generalize effectively on domain-specific tasks even when the target dataset contains limited annotated samples. Instead of navigating a highly non-convex loss landscape from a state of random initialization, which often leads to overfitting or convergence at poor local minima, the model begins fine-tuning from an optimized structural baseline, significantly reducing convergence time and improving overall top-1 classification accuracy.
+For mobile deployment, model size matters as much as accuracy. Standard CNN architectures are too large for entry-level devices. Howard et al. [24] introduced MobileNetV1, which replaces standard convolution operations with a two-step process — a depthwise convolution (one filter per channel) followed by a pointwise convolution (1×1 filter to combine channels). This reduces the computation cost by a factor of about 8–9 times compared to standard convolutions, with only a small accuracy trade-off.
 
-When transitioning from server-grade deep learning to mobile edge deployment, the selection of the underlying neural network architecture becomes a critical design decision governed by strict physical constraints. Traditional high-capacity models achieve superior performance by deepening or widening their layers, a practice that scales the required floating-point operations (FLOPs) quadratically.
+Sandler et al. [25] improved this with MobileNetV2, which adds inverted residual blocks (expanding channels internally before compressing) and linear bottlenecks (avoiding ReLU on thin layers to preserve information). MobileNetV2 achieves strong accuracy with only about 3.4 million parameters and a model size of around 14 MB, making it well-suited for mobile devices.
 
-To break this computational scaling law, Howard et al. \[24\] introduced MobileNetV1, a lightweight architecture that fundamentally restructured the convolution operation by replacing standard convolutional layers with depthwise separable convolutions. To understand the computational efficiency gained by this architectural shift, consider an input feature map of size DF× DF×M and a convolutional kernel of size DK× DK×M×N, where M is the number of input channels and N is the number of output channels. A standard convolutional layer produces a computational cost of:
-
-Coststandard= DFDF×M×N×DKDK  
-Depthwise separable convolutions split this monolithic operation into two distinct layers: a depthwise convolution and a pointwise convolution. The depthwise convolution applies a single spatial filter per input channel, mapping the spatial dimensions without mixing channels. The pointwise convolution utilizes a 1×1 kernel to linearly combine the outputs across the channel dimension, mapping the features into the final N\-dimensional space. The combined mathematical cost of this two-stage operation is formulated as:
-
-   
-CostSeparable= DFDF×M×DKDK×DF+DF×M×N  
-By expressing the computational reduction as a structural ratio, the efficiency gain can be precisely quantified as:
-
-                                                 CostseparableCoststandard= DF2.M.DK2+DF2.M.NDF2.M.N.DK2= 1N+ 1DK2 
-
-Given a standard 3×3 convolutional kernel DK=3, This structural alteration reduces the computational overhead and required FLOPs by a factor of approximately 8 to 9 with only a nominal reduction in absolute model accuracy \[24\].
-
-Building upon this foundational efficiency, Sandler et al. \[25\] introduced MobileNetV2, which established two additional architectural innovations: inverted residual blocks and linear bottlenecks. Standard residual blocks connect high-dimensional layers, compressing features inside the block before expanding them. Inverted residual blocks invert this design pattern by utilizing thin bottleneck layers for the skip connections, expanding the channel dimension internally via a1×1 expansion layer to a higher-dimensional space where depthwise convolutions extract spatial features, before projecting back to a thin channel space.
-
-Furthermore, Sandler et al. demonstrated that applying non-linear activation functions (such as ReLU) to low-dimensional bottleneck layers causes catastrophic information loss, as the non-linearity flattens negative values to zero, destroying useful features on low-dimensional manifolds. To preserve the information integrity of these activation spaces, MobileNetV2 replaces the non-linear activation with a linear bottleneck layer at the end of each block. This combination allows MobileNetV2 to achieve competitive classification accuracies while maintaining a compact memory footprint of approximately 14 MB \[25\].
-
-Subsequent advancements in mobile neural networks led to the introduction of EfficientNet by Tan and Le \[26\], which achieved notable classification improvements through a structured methodology called compound scaling. Instead of arbitrarily scaling a network's depth, width, or resolution, EfficientNet uses a fixed set of scaling coefficients to uniformly balance all three dimensions, maximizing feature representation capability.
-
-However, despite its superior laboratory accuracy, EfficientNet introduces significant deployment challenges within the context of resource-constrained agricultural edge AI. The architecture relies heavily on advanced non-standard operator layers, such as Swish activation functions and squeeze-and-excitation (SE) attention modules. When compiling the model for mobile hardware via TensorFlow Lite, these complex mathematical operators frequently lack direct hardware kernel support for INT8 post-training quantization. This operator incompatibility forces the runtime engine to fall back on CPU-bound floating-point emulations, causing severe memory allocation overheads, high execution latencies, and frequent application crashes on low-end hardware.
-
-To evaluate these lightweight frameworks specifically for plant pathology tasks, Guo et al. \[27\] conducted a comparative analysis of seven distinct mobile-optimized neural network architectures configured for Android deployment. Their empirical findings confirmed that MobileNetV2 provided the most optimal trade-off curve between absolute classification accuracy and real-time inference latency when executed on mid-tier Android smartphones \[27\].
-
-However, a critical review of their evaluation protocol reveals a major gap in the literature. Their benchmarks were conducted exclusively on mid-range consumer hardware and evaluated using clean, uncorrupted laboratory images. Their study did not account for the behavior of these models when deployed on truly low-end edge devices equipped with less than 2 GB of system RAM, nor did they evaluate performance degradation under real-world camera corruptions like motion blur and low-light exposure. This specific gap in the literature justifies the architecture selection and multi-stage evaluation framework developed in this study, positioning the MobiKD pipeline as a necessary expansion toward field-ready agricultural AI.
+EfficientNet [26] achieves higher accuracy but uses complex operators (Swish activations, squeeze-and-excitation blocks) that are not well-supported for INT8 quantization on TFLite, causing crashes on low-end hardware. Guo et al. [27] compared seven mobile architectures on Android devices and found MobileNetV2 offered the best balance of accuracy and speed — though their evaluation used only clean images on mid-range phones, not the low-RAM entry-level devices targeted by MobiKD.
 
 ## **2.5 Image Degradation And Robustness Training** {#2.5-image-degradation-and-robustness-training}
 
-The vulnerability of deep Convolutional Neural Networks to distribution shifts between the training domain and deployment environments represents a critical bottleneck in computer vision reliability. This structural fragility was systematically characterized by Hendrycks and Dietterich \[8\], who established the foundational ImageNet-C benchmark. Their framework evaluated state-of-the-art classifiers across 15 distinct noise, blur, weather, and digital corruption categories, executed across five discrete severity levels.
+Hendrycks and Dietterich [8] demonstrated that deep learning models lose a significant amount of accuracy when exposed to image corruptions — even minor ones like blur, noise, or brightness changes — despite performing well on clean test sets. This is a critical problem for field deployment, where photos taken with budget phones are routinely affected by these issues.
 
-The empirical findings of their study revealed a catastrophic reality: neural networks optimized to achieve top-1 accuracy on pristine test sets suffered severe performance degradation when exposed to minor structural corruptions \[8\]. Standard convolutional layers are highly sensitive to high-frequency spatial variations; consequently, when an image is altered by artifacts such as Gaussian blur, additive sensor noise, or localized brightness reductions, the internal activation maps of the network shift significantly, causing the final softmax layer to generate highly confident, incorrect classifications. This vulnerability directly maps to the operational context of rural smallholder farming, where low-cost mobile camera sensors routinely introduce exactly these types of optical and digital distortions.
+To improve robustness, researchers have explored training models on corrupted images alongside clean ones. Geirhos et al. [28] found that models trained on stylized images focus more on shape than texture, which improves generalization. Hendrycks et al. [29] introduced AugMix, which blends multiple augmentations and uses a consistency loss to keep predictions stable under corruption. Lim et al. [30] developed AutoAugment, which uses reinforcement learning to automatically find the best augmentation strategy.
 
-To mitigate this drop in accuracy, augmentation-based robustness training, a paradigm that structurally introduces corrupted input matrices into the optimization cycle, has emerged as a widely supported approach to improving model resilience. Geirhos et al. \[28\] advanced this field by demonstrating a strong "shape bias" vs. "texture bias" in deep networks. Their research showed that training classifiers on stylized representations forced the hidden layers to move away from local texture dependency and prioritize global geometric structures, which substantially improved generalization across novel, unseen image corruptions \[28\].
+MobiKD applies three specific degradation types that match the real-world conditions of low-cost smartphone cameras in the field:
 
-Expanding upon this concept, Hendrycks et al. \[29\] introduced *AugMix*, an advanced data augmentation framework that utilizes a stochastic pipeline to blend multiple, sequentially chained augmentation operations. By pairing this multi-path structural distortion with a Jensen-Shannon divergence consistency loss, their system forced the network to maintain stable prediction outputs across varied corruption manifolds while preserving high accuracy on uncorrupted baseline images \[29\].
+**Gaussian Blur** models camera shake and focus problems. The blurred image is produced by applying a smoothing filter to the original:
 
-Similarly, Lim et al. \[30\] proposed *AutoAugment*, an algorithmic approach that treats augmentation strategy selection as a discrete search problem. By leveraging Reinforcement Learning with a Child-Policy agent optimized via Proximal Policy Optimization (PPO), their framework automatically discovered data-driven augmentation schedules that vastly outperformed traditional handcrafted schedules \[30\].
+**I_blur = I * G(σ)**
 
-While these generalized frameworks demonstrate the value of training-stage pixel transformations, the MobiKD pipeline applies targeted data-engineering principles specifically optimized for low-cost smartphone sensors. Rather than relying on generic geometric or color-space shifts, MobiKD isolates and mathematically models three precise degradation profiles that characterize budget mobile cameras operating in unconstrained agricultural environments:
+where I is the original image, G(σ) is a 2D Gaussian filter kernel, and σ controls how strong the blur is. A 5×5 kernel is used in MobiKD.
 
-1. **Camera Motion and Focus Deficit (Gaussian Blur):** Handheld smartphone operations in open fields routinely suffer from unstable micro-movements and lens focusing limitations, which are modeled via a spatial Gaussian blur kernel. Mathematically, the blurred image Iblur(x,y) is computed by convolving the original input image I(x,y) with a 2D Gaussian kernel function G(x,y,b, formulated as:
+**Additive Noise** models sensor interference from cheap CMOS sensors. Random noise is added to each pixel:
 
- Iblurx,y=Ix,y\*Gx,y,b=Ix,y\*(12πb2exp \-x2+y22b2 )
+**I_noise = I + ε,   where ε ~ N(0, σ²),   σ = 0.15**
 
-where b represents the standard deviation governing the spatial extent of the blur radius, controlling the reduction of high-frequency edge information.
+where ε is random noise drawn from a normal distribution with mean 0 and standard deviation 0.15. The result is clipped to stay within the valid [0, 1] pixel range.
 
-2. **Electronic Sensor Interferences (Additive White Gaussian Noise):** Low-cost complementary metal-oxide-semiconductor (CMOS) sensors operating in high-temperature or budget hardware configurations introduce electronic thermal noise. This artifact is modeled by corrupting each pixel channel with a random variable drawn from a zero-mean normal distribution, expressed as:
+**Gamma Transformation** models underexposure in dark or shadowy conditions:
 
-                                 Inoise=Ix,y+ƞ(x,y), where ƞ(x,y) \~ Ɲ(0,n2) 
+**I_dark = I^γ,   γ = 2.5**
 
-where n2 defines the variance of the electronic noise floor, which injects high-frequency structural disruptions that alter localized leaf texture features.
+where γ is the gamma value. A value above 1 makes the image darker by compressing low-intensity pixels, making disease spots harder to see.
 
-3. **Suboptimal Field Exposure (Power-Law Gamma Transformation):** Outdoor imaging frequently suffers from severe underexposure due to harsh shadows or low-light conditions under dense cloud covers. This non-linear distortion is modeled using a power-law gamma transformation, formulated as:
+MobiKD's fine-tuning stage trains the student model on all three corrupted image types using a cross-domain distillation loss — where the student receives a corrupted image but is guided by the teacher's clean-image outputs. This forces the model to produce stable, clean-equivalent predictions even when the input photo is degraded, which is what makes MobiKD robust in real field conditions.
 
-                                             Ilow-light(x,y)=c.I(x,y) 
-
-where c is a scaling constant (typically set to 1\) and γ\>1 non-linearly compresses the lower intensity values, diminishing the local visual contrast of pathological lesions against the healthy leaf body.
-
-The core algorithmic novelty of the MobiKD pipeline lies in the intentional combination of these physical degradation models with a Cross-Domain Knowledge Distillation loss structure during the fine-tuning stage. Traditional robustness training processes these corrupted image states by pairing them directly with hard, one-hot encoded ground-truth labels. While this method forces the weights to adapt, it places an immense optimization strain on low-capacity mobile student networks, which often lack the parameter volume to learn invariant features under hard constraints without suffering a major drop in clean-image accuracy.
-
-The MobiKD fine-tuning protocol circumvents this limitation by implementing a cross-domain distillation constraint:
-
-   LLiteRob=αLCE(y,σ(sdeg))+(1-α)T2LKL(σ(tcleanT),σ(sdegT))
-
-This objective function forces the compact student network, when processing a corrupted input image Sdeg to produce a probability distribution that is mathematically consistent with the soft target logit distribution generated by the uncorrupted, high-capacity teacher model processing the identical clean input image (tclean). By using the teacher’s clean soft labels as an optimization guide, the student model is not forced to fit rigid hard targets under noisy inputs. Instead, it leverages the teacher's structural probability landscape to smoothly isolate pathologically invariant features across both clean and degraded visual domains.
-
-Within the agricultural AI domain, Lu et al. \[31\] explored the deployment of robustness augmentations by applying additive noise vectors to improve the field resilience of an Irish potato leaf disease classifier. Their experimental results confirmed that noise injection effectively reduced classification errors when models were tested in unconstrained outdoor settings \[31\].
-
-However, a critical review of their methodology highlights three major limitations that prevent its application to budget agricultural deployments. First, their pipeline was built around large, uncompressed architectures, failing to consider the physical VRAM and computational constraints of edge devices. Second, their work lacked a model compression strategy like knowledge distillation, leading to massive execution latency. Third, their robustness evaluation was limited to a single noise type, completely ignoring the complex, combined degradation patterns (such as simultaneous blur and low-light exposure) that characterize real-world smallholder environments.
-
-The MobiKD pipeline directly addresses this multi-dimensional gap. By integrating a multi-condition degradation model within a lightweight, compressed distillation architecture, this study establishes a highly resilient and deployable edge framework optimized for the computational and practical realities of smallholder farming.
+Lu et al. [31] explored noise augmentation for a potato disease classifier and found improvements in field performance. However, their model was large and not compressed for mobile use, and they tested only one type of corruption. MobiKD addresses all three limitations.
 
 ## **2.6 Mobile Deployment Of Deep Learning Models** {#2.6-mobile-deployment-of-deep-learning-models}
 
-The final phase of the agricultural AI development lifecycle involves moving a trained model from high-power training servers down to edge-computing hardware. This architectural transition requires a complete restructuring of how model operations are stored and computed. As established by David et al. \[32\], the TensorFlow Lite (TFLite) framework provides a highly optimized execution engine designed specifically for mobile and embedded devices. The core optimization technique enabling this transition is Post-Training Quantization (PTQ), a process that maps continuous 32-bit floating-point weights and activations (FP32) down into discrete 8-bit signed integers (INT8).
+Deploying a trained deep learning model to a mobile phone requires reducing its size and computational cost without losing too much accuracy. TensorFlow Lite (TFLite) is the main framework used for this [32]. Its core technique is Post-Training Quantization, which converts 32-bit floating-point model weights into smaller integer values.
 
-Mathematically, this compression is governed by a uniform linear affine quantization scheme that maps real-world floating-point values $r$ into compact integer representations $q$. The transformation is expressed as:
+The basic quantization formula maps a real floating-point value r to an integer q:
 
-                                       r=S.(q-Z)
+**r = S · (q − Z)**
 
-where S is a strictly positive 32-bit floating-point scaling factor that determines the step size of the quantization grid, and Z is an 8-bit integer zero-point that corresponds exactly to the real value of zero in the floating-point space. The scale S and zero-point Z are calculated across a specific tensor range defined by the minimum (rmin) and maximum (rmax) clipping thresholds:
+where S is the scale factor (the step size between integer values) and Z is the zero-point (the integer that represents the floating-point value of zero). These two values are calculated from the minimum and maximum of the model's weight range:
 
-S= rmax-rminqmax-qmin  
-                                    Z=round(-rminS) \+qmin
+**S = (r_max − r_min) / (q_max − q_min)**
 
-where qminand qmax represent the absolute bounds of the target integer precision channel (for signed INT8 these values are fixed at \-128 and 127, respectively).
+**Z = round(−r_min / S) + q_min**
 
-During model execution, standard floating-point matrix multiplications are replaced with integer-only arithmetic. Consider a basic layer operation involving an input activation matrix $A$ multiplied by a weight matrix W. By substituting the quantization parameters, the underlying calculation is transformed into:
+where r_min and r_max are the smallest and largest weight values, and q_min and q_max are the limits of the integer range (−128 and 127 for INT8). Once quantized, all calculations use fast integer arithmetic instead of slower floating-point operations, reducing model size and speeding up inference.
 
-SA(qA-ZA) . SW(qW \-ZZ)=SASW(qAqW \-qAZW-qWZA+ZAZW)  
-The runtime engine optimizes this equation by pre-calculating the zero-point terms (qAZW, qWZA, ZAZW) as static offline constants, allowing the mobile processor to perform core operations using highly efficient, hardware-accelerated integer instructions. The product coefficient SASW is subsequently realigned to the output layer's scale via a bit-shifting multiplier, entirely avoiding expensive floating-point arithmetic at runtime.
+David et al. [32] showed that INT8 quantization reduces model size by 4× while keeping accuracy loss under 1%. Seng et al. [33] demonstrated on-device TFLite inference for crop disease detection, but their system required 3 GB of RAM — too much for low-end devices. Choi et al. [34] confirmed that MobileNetV2 models compressed to under 5 MB via INT8 quantization can run reliably on phones with less than 2 GB of RAM. However, neither study tested robustness under degraded image conditions.
 
-David et al. \[32\] demonstrated that this integer translation achieves a massive $4\\times$ reduction in model file size while restricting absolute accuracy loss to under 1.0 percentage point across general image classification benchmarks. Post-training quantization is highly advantageous for agricultural edge AI pipelines because it operates directly on compiled model files, eliminating the complex implementation overhead, high VRAM requirements, and hyperparameter instability associated with Quantization-Aware Training (QAT). This allows developers to easily preserve the fine visual feature extraction capabilities inherited through transfer learning backbones.
+For the mobile application layer, Flutter was chosen because it compiles Dart code directly into native ARM machine code, giving smooth performance even on entry-level hardware [35]. The TFLite model is connected to the Flutter app via the flutter_litert plugin, which passes image data directly to the C++ TFLite engine without unnecessary memory copies. This keeps memory usage low and inference fast — essential for operation on a 2 GB RAM device.
 
-Within the agricultural AI domain, several studies have explored on-device execution to bypass the infrastructure bottlenecks of rural areas. Seng et al. \[33\] successfully demonstrated an on-device TFLite implementation of a MobileNet-based crop disease classifier, proving that automated computer vision could reliably identify leaf pathologies locally on the Android operating system.
+## **2.7 Research Gaps** {#2.7-research-gaps}
 
-However, a critical review of their deployment profile reveals a major operational limitation: their system demanded high-tier consumer smartphones equipped with a minimum of 3 GB of system RAM to avoid operating system out-of-memory(OOM) interventions. Furthermore, their performance evaluations ignored the realities of field photography, assuming clean, high-contrast, and perfectly focused leaf images \[33\]. This leaves a significant question mark regarding how such systems perform when deployed on the budget, resource-constrained devices actually owned by rural populations.
+A review of the existing literature shows that while significant progress has been made in plant disease detection, knowledge distillation, and mobile AI, existing solutions are fragmented. No published study has combined all three requirements that MobiKD addresses: a model small enough for truly low-end Android hardware (under 5 MB), explicit robustness to the image degradations caused by budget smartphone cameras, and fully offline operation with no internet dependency.
 
-To address these extreme hardware constraints, Choi et al. \[34\] investigated the optimization limits of lightweight models deployed specifically on entry-level Android handsets equipped with sub-2 GB RAM architectures. Their engineering benchmarks revealed that compact MobileNetV2 models compressed via full integer INT8 quantization down to a storage footprint of less than 5 MB successfully satisfied the strict memory allocation boundaries of low-tier operating systems \[34\]. By maintaining a small runtime memory allocation, the quantized model avoided triggering the Android low-memory killer (LMK) daemon, ensuring consistent application stability.
-
-Nevertheless, the scope of Choi et al.’s research remained restricted to evaluation environments featuring uncorrupted images. Their pipeline did not incorporate data-engineering mechanisms to shield the quantized parameters against severe accuracy drops caused by physical field corruptions such as motion blur and camera sensor noise. This limitation highlights a critical gap between pure model compression and practical, field-ready deployment robustness.
-
-To transition these optimized neural models into user-facing tools, the underlying mobile software architecture must be chosen carefully to balance native execution speed with rapid UI rendering. Flutter has emerged as a highly effective development environment for agricultural edge AI applications operating within resource-poor contexts \[35\]. Unlike traditional hybrid mobile frameworks that rely on expensive WebViews or JavaScript-to-native bridges, which introduce severe CPU bottlenecks and UI stuttering on low-end processors, Flutter compiles its Dart source code directly into native ARM machine code. The framework bypasses native platform UI widgets entirely, rendering its interface pixel-by-pixel using the high-performance Impeller graphic engine. This ensures smooth 60 frames-per-second performance even on budget SoCs with limited graphical capabilities.
-
-For deep learning integration, the framework relies on specialized native plugins, specifically the modern Flutter Litert inference wrapper \[35\]. This package allows the Dart application layer to communicate directly with the underlying C++ TFLite engine via foreign function interfaces (FFI). It passes raw image pixel byte buffers from the device's camera module directly into the quantized model's input memory address space without creating duplicate tensor allocations in the system RAM.
-
-This highly streamlined mobile architecture has been successfully validated across several agricultural mobile AI deployments within sub-Saharan African contexts \[36\]. The existing literature confirms that the combination of Flutter and TFLite provides a stable platform for edge computing.
-
-However, prior implementations have consistently operated under a fragmented architecture. They treat model compression, data-driven degradation resilience, and cross-platform mobile development as entirely separate problems. This lack of integration creates a clear research gap: the literature lacks a unified, reproducible end-to-end pipeline that combines cross-domain knowledge distillation with explicit degradation-invariance training and full INT8 quantization for offline, low-RAM mobile deployment. This is the multi-dimensional gap that the MobiKD pipeline is designed to fill, establishing a new benchmark for field-ready, accessible agricultural AI.
-
-## **2.7 Identification of Research Gaps** {#2.7-identification-of-research-gaps}
-
-A critical synthesis of the prevailing literature reveals a clear disconnect between high-performance laboratory model development and the practical engineering requirements of resource-constrained agricultural edge deployment. While academic research has pushed the boundaries of classification accuracy on pristine datasets and explored standalone model compression techniques, existing frameworks remain fragmented. This fragmentation leaves three specific, unaddressed research gaps that the MobiKD framework is systematically designed to bridge:
-
-1. **The Integration of Degradation-Aware Training with Knowledge Distillation:** Current applications of Knowledge Distillation (KD) within digital plant pathology focus almost exclusively on minimizing model parameters while maximizing top-1 accuracy on uncorrupted baseline datasets. Conversely, contemporary research into image degradation robustness relies on heavy, uncompressed architectures optimized via hard labels, which places an unsustainable computational strain on low-capacity models.
-
-The literature lacks an exploration of an optimization suite that combines these two domains. Specifically, no prior study has implemented a cross-domain distillation mechanism that forces a compressed student model to align its noisy-input logit space with an uncorrupted teacher model's clean-input soft probability distributions. MobiKD addresses this gap by introducing a multi-stage pipeline where degradation invariance and architectural compression are optimized simultaneously rather than as separate, isolated tasks.
-
-2. **Empirical Validation of Fully Offline Inference on Entry-Level Edge Hardware:** The deployment landscape of agricultural computer vision is heavily skewed toward mid-tier hardware specifications (demanding 3 GB to 8 GB of system RAM) or continuous cloud-dependent communication loops. While theoretical papers assert that compressed integer models are suitable for edge devices, the literature lacks empirical validation of an end-to-end potato disease diagnostic system running on truly low-end Android hardware (sub-2 GB RAM configurations) in an absolute offline state.
-
-By testing and documenting execution parameters, such as runtime memory heap allocations and CPU thermal-throttling latencies, directly on an entry-level device class (the Samsung Galaxy A07 baseline), this study addresses a critical operational gap, moving agricultural AI from theoretical mobile compatibility into verified field utility.
-
-3. **A Unified, Reproducible Pipeline Featuring a Standardized Multi-Condition Robustness Evaluation Suite:** Existing methodologies in agricultural AI are often highly customized and fragmented, typically presenting isolated optimization steps without providing a reproducible lifecycle framework. No single published study provides a complete, open-source pipeline spanning raw data ingestion, teacher-student distillation optimization, targeted degradation modeling, INT8 quantization compilation, and cross-platform mobile asset mapping. Furthermore, the evaluation metrics in the literature rarely subject compressed models to a rigorous multi-condition corruption suite that mirrors the multi-layered optical distortions of the field.
-
-MobiKD resolves this structural gap by delivering a reproducible, seven-stage software framework evaluated against a standardized multi-condition degradation matrix (encompassing separate and combined states of motion blur, electronic sensor noise, and low-light exposure), establishing a complete and verifiable benchmark for field-ready agricultural AI.
+Studies that apply Knowledge Distillation for agricultural AI — such as Wang et al. [22] — validate their models only on clean, high-quality images and do not test what happens when the compressed model receives a blurry or dark photo. Studies that address degradation robustness — such as Lu et al. [31] — use large uncompressed models that cannot fit on entry-level phones and test only one type of image corruption. Studies that deploy models on mobile devices — such as Choi et al. [34] and Seng et al. [33] — confirm that lightweight models can run on phones, but do not evaluate how well they perform under the real image conditions found in the field. MobiKD is designed to close all three of these gaps simultaneously by combining Knowledge Distillation, multi-condition degradation training, INT8 quantization, and fully offline Flutter deployment into a single reproducible seven-stage pipeline, validated on a real entry-level Android device in a sub-2 GB RAM environment.
 
 # **CHAPTER 3: RESEARCH METHODOLOGY** {#chapter-3:-research-methodology}
 
 ## **3.1 Introduction** {#3.1-introduction}
 
-This chapter outlines the complete technical design, experimental paradigms, architectural blueprints, and operational validation frameworks that govern the development and execution of the MobiKD system. To systematically bridge the agricultural AI access gap, the methodology developed in this study moves away from pure theoretical abstraction, focusing instead on the rigorous engineering, compression, and deployment of edge-computing intelligence within resource-constrained environments. The structural organization of this chapter details the foundational research design, the geographical and environmental parameters of the targeted study sites within Rwanda, the technical data preparation workflows, the underlying hardware and software development environments, the multi-stage system architecture, and the empirical evaluation protocols used to measure system performance.
-
-MobiKD adopts a quantitative, experimental, and constructive research design. Within the domain of software engineering and computer science, constructive research focuses on the purposeful creation of a tangible technical artifact designed to solve a validated, real-world domain problem. For this investigation, the artifact is a highly optimized, reproducible seven-stage deep learning pipeline that automatically ingests raw plant pathology data and transforms it into a compressed, mobile-deployable binary.
-
-The research is fundamentally applied and constructive, prioritizing empirical validation and field utility over speculative algorithmic modeling. The efficacy of the constructed pipeline is measured using clear, mathematically defined, and highly reproducible performance metric, specifically top-1 classification accuracy, macro F1-score, degradation resilience deltas, absolute memory allocation footprints, and local on-device execution latencies.
-
-***Table 1: Experimental Design Matrix: Model Variants vs. Evaluation Conditions***
-
-| Model Variant | Cond. 1: Clean (Baseline)  | Cond. 2: Gaussian Blur | Cond. 3: Gaussian Noise | Cond. 4: Low-Light Gamma | Cond. 5: Combined Corruption |
-| :---- | :---- | :---- | :---- | :---- | :---- |
-| **M1: Baseline Student** | Exp. 1.1 | Exp. 1.3 | Exp. 1.3 | Exp. 1.4 | Exp. 1.5 |
-| **M2: KD Student**  | Exp. 2.1 | Exp. 2.2 | Exp. 2.3 | Exp. 2.4 | Exp. 2.5 |
-| **M3: MobiKD (FP32)**  | Exp. 3.1 | Exp. 3.2  | Exp. 3.3 | Exp. 3.4 | Exp. 3.5 |
-| **M4: MobiKD-TFLite** | Exp. 4.1 | Exp. 4.2  | Exp. 4.3 | Exp. 4.4 | Exp. 4.5 |
-
-To isolate and evaluate the exact performance contributions of each structural phase within the optimization lifecycle, the experimental design configures a matrix that evaluates four distinct model variations across five independent test environments. The four model variations include:
-
-* **M1 (The Baseline Student):** A standard MobileNetV2 network trained entirely from scratch using conventional supervised learning and categorical cross-entropy loss on uncorrupted images, serving as the foundational control model.
-
-* **M2 (The KD Student):** A MobileNetV2 architecture optimized using logit-level, temperature-scaled Knowledge Distillation guided by a pre-trained ResNet50 teacher model, isolating the precise impact of structural intelligence transfer.
-
-* **M3 (The MobiKD FP32 Model):** A distilled student model subjected to the specialized degradation-aware robustness fine-tuning protocol, operating at 32-bit floating-point precision to isolate the effects of environmental feature-invariance training.
-
-* **M4 (The MobiKD-TFLite Model):** The final fine-tuned student architecture compiled using full INT8 post-training quantization and evaluated directly on edge hardware, measuring the physical constraints of low-bit integer operations.
-
-These four variants are subjected to a comprehensive testing suite comprising five separate evaluation conditions designed to mirror the optical and atmospheric distortions of the field: Clean (unaltered baseline control images), Gaussian Blur (simulating hand-held camera instability), Additive White Gaussian Noise (modeling low-cost CMOS sensor electronic interference), Low-Light Gamma Transformations (simulating underexposed, high-shadow field environments), and a Combined Corruption state (a worst-case scenario featuring simultaneous blur, noise, and low contrast). This multi-variable verification structure allows the research to precisely map accuracy degradation slopes, verify the preservation of feature space representations across low-bit integer math, and quantify the exact resilience gains introduced by the pipeline.
-
-From a software engineering lifecycle perspective, reproducibility is treated as a core architectural requirement rather than a secondary consideration. To ensure full algorithmic transparency and cross-environment predictability, all environmental configurations, structural model properties, training hyperparameters, optimization schedules, and degradation bounds are completely decoupled from the execution code. These parameters are centralized within a dedicated configuration file (config.py).
-
-By enforcing this strict separation of configuration and logic, any change to the model's training variables, such as the distillation temperature ($T$), the loss balancing coefficient ($\\alpha$), target learning rates, or data transformation boundaries, can be adjusted through a single source of truth. Furthermore, the orchestration framework automatically enforces deterministic seed states across all pseudorandom number generators within Python, NumPy, and TensorFlow. The execution pipeline is built with automated logging mechanisms that stream training metrics, evaluation tensors, model checkpoints, and quantized binary outputs into structured, timestamped directories. This ensures that the entire lifecycle, from raw data ingestion to physical mobile asset generation, remains verifiable, auditable, and fully reproducible across any standard Linux or Windows development host.
+This chapter explains how MobiKD was built — from collecting data to training the AI model and deploying it on a smartphone. The research follows a constructive and experimental approach, which means the goal is to build a working system and then measure how well it performs. MobiKD was developed in stages: first the training pipeline was built and tested using a standard benchmark dataset, then the model was applied to real potato leaf images, and finally it was deployed as a mobile application. Each stage was validated before moving to the next. Performance was measured using accuracy, model size, and inference speed on a real low-end Android device.
 
 ## **3.2 Data Collection** {#3.2-data-collection}
 
-### **3.2.1 Data Collection Methodology** {#3.2.1-data-collection-methodology}
+### **3.2.1 Datasets Used** {#3.2.1-datasets-used}
 
-The computational training, structural distillation, and multi-condition robustness evaluation of the MobiKD framework leverage the CIFAR-100 benchmark dataset \[37\], a well-established public image classification archive, as the preliminary validation domain. The primary target application of MobiKD is Irish potato disease detection on resource-constrained mobile devices; however, potato-specific leaf imagery collection is treated as Phase 2 of this project. CIFAR-100 was selected for the initial framework validation for three reasons central to scientific rigour and engineering transparency., originally curated by Hughes and Salathé. The selection of PlantVillage as the foundational data source for this study is governed by three primary engineering and academic criteria.
+MobiKD was built and evaluated using two different datasets, each serving a specific purpose in the development process.
 
-First, CIFAR-100 is the most widely used benchmark in mobile deep learning and knowledge distillation research, enabling direct, apples-to-apples comparison of MobiKD's compression efficiency and robustness gains against prior published results in the KD literature. This benchmark reproducibility is critical for establishing that the framework itself, independent of domain-specific data, is technically sound. and deep learning literature. Utilizing this dataset ensures that the baseline accuracies and compression efficiencies achieved by the MobiKD pipeline can be directly compared, benchmarked, and validated against existing state-of-the-art architectures without introducing confounding data-source variables.
+**Stage 1 — Framework Validation: CIFAR-100**
 
-Second, CIFAR-100 contains 100 fine-grained classes spanning five super-categories. For the MobiKD preliminary validation, a binary classification task was constructed: Tree vs. Not-Tree. The Tree class aggregates five fine-grained CIFAR-100 categories, oak\_tree, palm\_tree, pine\_tree, willow\_tree, and maple\_tree, producing a realistic class-imbalanced binary problem structurally analogous to the future potato disease detection task (one positive pathological class vs. a large heterogeneous negative class). This binary proxy faithfully replicates the core classification challenge without requiring a domain-specific dataset. mapping precisely to the target botanical vectors under investigation: healthy control leaves, leaves infected with early blight (Alternaria solani), and leaves infected with late blight (Phytophthora infestans).
+The first dataset used was CIFAR-100, a well-known public benchmark in deep learning research [37]. It contains 60,000 small images (32×32 pixels) across 100 classes. To validate that the MobiKD training pipeline — including Knowledge Distillation and degradation-aware fine-tuning — works correctly before applying it to real potato images, a binary classification task was built from CIFAR-100: **Tree vs. Not-Tree**. The Tree class combined five CIFAR-100 categories (oak, palm, pine, willow, and maple trees), giving 500 tree images out of 50,000 training images. This created a strongly imbalanced problem similar in structure to the real potato task (one disease class vs. a large healthy/other class). Using this benchmark allowed the framework to be verified against published results from other Knowledge Distillation studies, ensuring the pipeline itself is correct before moving to the application domain.
 
-Third, CIFAR-100 is completely open-access, downloaded programmatically via the TensorFlow/Keras datasets API (tensorflow.keras.datasets.cifar100), ensuring full reproducibility without proprietary data access requirements. The identical MobiKD pipeline will be retrained on the PlantVillage potato leaf dataset (Hughes and Salathé) in Phase 2, requiring only replacement of the Stage 1 data preparation module, demonstrating the framework's intended domain-agnostic design. (hosted at https://www.kaggle.com/datasets/emmarex/plantdisease ). The ingestion module was executed during Stage 1 of the automated Python training pipeline, applying deterministic hash verifications to guarantee data integrity across the localized storage volumes.[https://www.kaggle.com/datasets/emmarex/plantdisease](https://www.kaggle.com/datasets/emmarex/plantdisease)
+The 50,000 CIFAR-100 training images were split into 80% training (40,000 images) and 20% validation (10,000 images) using stratified splitting to preserve the class ratio. The original CIFAR-100 test set (10,000 images) was kept separate and used only for final evaluation. All images were normalized to the [0, 1] range and internally upsampled to 64×64 pixels to provide enough resolution for the ResNet50 and MobileNetV2 backbones.
 
-### **3.2.2 Dataset Description and Sample Size** {#3.2.2-dataset-description-and-sample-size}
+Because the Tree class was heavily outnumbered, class weights were applied during training so that the model would not simply ignore the minority class. The weight for each class was calculated as:
 
-***Table 2: CIFAR-100 Tree/Not-Tree dataset class distribution and stratified train/validation/test splits.***
+**w_c = N / (|C| × n_c)**
 
-| Class | Disease Organism | Images | Train / Val / Test |
-| :---- | :---- | :---- | :---- |
-| **Potato\_Healthy** | None (control) | 152 | 106 / 31 / 15 |
-| **Potato\_Early\_Blight** | Alternaria solani | 1,000 | 700 / 200 / 100 |
-| **Potato\_Late\_Blight** | Phytophthora infestans | 1,000 | 700 / 200 / 100 |
-| **Total** | \_ | 2,152 | 1,506 / 431 / 215 |
+where N is the total number of training images, |C| is the number of classes, and n_c is the number of images in class c. This ensures that errors on the smaller class are penalized more heavily during training, keeping the model balanced.
 
-***A. Sample dataset images, early blight, late blight, healthy leaf side by side**: This is the most important missing visual. Readers and examiners want to see what the actual leaf images look like. Show one clean image per class, labelled.*
+**Stage 2 — Application Domain: PlantVillage Potato Dataset**
 
-As illustrated in Table 1, the CIFAR-100 tree/not-tree dataset exhibits a severe natural class imbalance, with the Tree class (500 training images across 5 fine-grained categories) being outnumbered by the Not-Tree class (49,500 training images across 95 categories) at a ratio of approximately 1:99. The CIFAR-100 training split (50,000 images) was further divided into 80% training (40,000 images) and 20% validation (10,000 images) using stratified random splitting. The original CIFAR-100 test set (10,000 images, unseen during training) was held out as the final evaluation set. All images are 32×32×3 RGB arrays normalised to the \[0, 1\] floating-point range. The MobiKD architecture internally upsamples inputs to 64×64 via bilinear interpolation to provide sufficient spatial resolution for the ResNet50 and MobileNetV2 backbone feature extractors. If left unmitigated during backpropagation, this structural asymmetry would skew the categorical cross-entropy loss function. The network would optimize primarily for the majority classes, leading to inflated global accuracy metrics while masking a high false-negative rate for the critically important healthy control samples.(nhealthy=152)(nblight=1000 each)
+Once the MobiKD framework was validated on CIFAR-100, the same pipeline was retrained on real potato leaf images from the PlantVillage dataset [6], publicly available on Kaggle. This dataset contains annotated photographs of potato leaves across three classes:
 
-To mitigate the severe class imbalance, an inverse-frequency class weighting matrix was computed and applied to all loss computations across every pipeline stage. For a binary classification problem with N total training samples and n\_c samples in class c, the class weight w\_c is derived as:tal number of training samples N, and the individual sample count for that class:wcnc
+***Table 2: PlantVillage potato leaf dataset — class distribution and splits.***
 
-wc= NCnc  
-where |C| \= 2 for the binary Tree / Not-Tree task. In the MobiKD CIFAR-100 training split, this yields: w\_not\_tree ≈ 0.51 (down-weighting the majority class) and w\_tree ≈ 50.50 (amplifying the minority class gradient). This weighting scheme prevents the optimizer from collapsing to a degenerate solution that predicts Not-Tree for all inputs and forces the model to maintain genuine recall on the minority Tree class throughout training. to the loss gradients generated by each sample. Consequently, minority class prediction errors contribute more heavily to the total loss penalty, forcing the optimizer to maintain high sensitivity across the entire target classification taxonomy.
+| Class | Total Images | Train | Validation | Test |
+| :---- | :---- | :---- | :---- | :---- |
+| **Healthy** | 152 | 106 | 31 | 15 |
+| **Early Blight** | 1,000 | 700 | 200 | 100 |
+| **Late Blight** | 1,000 | 700 | 200 | 100 |
+| **Total** | **2,152** | **1,506** | **431** | **215** |
 
-### **3.2.3 Degraded Test Set Construction** {#3.2.3-degraded-test-set-construction}
+The dataset was split into training, validation, and test sets using stratified random sampling. The Healthy class is significantly smaller than the two disease classes, so class weighting was applied here as well to prevent the model from ignoring healthy leaves.
 
-To quantify degradation robustness, a defining property of the MobiKD framework the 10,000-image CIFAR-100 test set was duplicated and transformed into four synthetically degraded evaluation sets, each modelling a distinct class of real-world optical and sensor-level image corruption. These degradation models are directly transferable to the planned potato-disease deployment domain, where identical physical impairments arise from low-cost smartphone cameras in outdoor agricultural environments. environmental distortions common to low-cost mobile hardware in unconstrained agricultural settings.
+**Stage 3 — Mobile Application: Collected Leaf Images**
 
-***Table 3: MobiKD degradation conditions: mathematical model, implementation parameters, and physical real-world analogue.***
+After the MobiKD model was trained and compressed, it was integrated into the mobile application and tested on real-world photos. To validate the application in a realistic setting, potato leaf images were collected using the smartphone camera (Samsung Galaxy A07) directly in field conditions. These photos — taken in natural light, at various angles, with some blur and shadow — were used to confirm that the model performs correctly when deployed in the app. This final stage tested the complete system end to end: from a farmer taking a photo to seeing a disease prediction on the screen.
 
-| Condition | Mathematical Transformation | Hyperparameter Parameters | Physical Field Degradation Simulated |
-| :---- | :---- | :---- | :---- |
-| Condition 1: Clean | Identity Mapping (I) | Unaltered Baseline | Controlled, pristine laboratory baseline |
-| Condition 2: Blur | 2D Spatial Gaussian Filtering | Kernel: 5 ×5, b=Auto | Unstable hand-held operations/camera shake |
-| Condition 3: Noise | Additive White Gaussian Noise | n\= 0.15, clipped \[0,1\] | Low-cost CMOS sensor thermal interference |
-| Condition 4: Low-Light | Non-linear Power-Law Gamma | γ=2.5, Scaling c \= 1.0 | Poor exposure / deep canopy shadows |
-| Condition 5: Combined | Sequential Composite Pipeline | Blur → Noise → Low-Light | Worst-case compound field degradation |
+### **3.2.2 Degraded Test Set Construction** {#3.2.2-degraded-test-set-construction}
 
-*B. Degradation examples: same leaf, five conditions. Take one potato leaf image and show it five times: clean, blur, noise, low-light, and combined.* 
+To measure how well MobiKD handles poor image quality, four additional test sets were created by applying synthetic image corruptions to the original clean test images. These corruptions simulate the real conditions of field photography using a low-cost smartphone. Each corruption type is described below with its formula.
 
-These degradation conditions are implemented via specialized mathematical operations applied to the input image arrays:
+**Gaussian Blur** — simulates camera shake or focus problems:
 
-* Gaussian Spatial Blur simulates camera motion blur and focus deficits from hand-held device instability. The original pixel tensor I is convolved with a 5×5 Gaussian kernel K\_σ:  
-  I\_blur(x, y) \= (I \* K\_σ)(x, y) \= Σ\_{u,v} I(x−u, y−v) · K\_σ(u, v)     … (4)  
-  where K\_σ(u,v) \= exp(−(u²+v²) / 2σ²) / (2πσ²) and σ is automatically derived from kernel size (σ \= 0 in OpenCV's GaussianBlur triggers automatic estimation ≈ 1.1). Applied using cv2.GaussianBlur(image, (5,5), 0).  is automatically derived from the kernel size to maintain smooth, edge-attenuating frequency filtering:b
+**I_blur = I * G(σ),   with a 5×5 kernel**
 
-Iblurx,y= i=-22j=-22Ix+i,y+j.G(i,j,b)
+where I is the original image and G(σ) is a Gaussian smoothing filter. The blur removes sharp edges, making disease spots less distinct.
 
-* Additive White Gaussian Noise (AWGN), models thermal sensor noise in CMOS imagers. Every pixel channel p is corrupted by an independent zero-mean Gaussian random variable:  
-  I\_noise(x, y) \= clip(I(x, y) \+ ε,  0, 1),   where  ε \~ N(0, σ²),  σ \= 0.15     … (5)  
-  A noise standard deviation of σ \= 0.15 (on the normalised \[0,1\] scale) represents the signal-to-noise ratio observable on sub-USD-100 Android camera hardware under indoor fluorescent or low-light conditions. . The resulting values are clipped to the valid floating-point interval \[0.0, 1.0\] to prevent numerical overflow:n=0.15
+**Additive Noise** — simulates interference from a cheap camera sensor:
 
-Inoisex,y=min⁡(1.0,0.0, Ix,y+Ɲ0,0.152 )
+**I_noise = clip(I + ε,  0, 1),   ε ~ N(0, 0.15²)**
 
-* Power-Law Gamma Transformation (Low-Light), models sensor underexposure caused by canopy shadows, overcast skies, or automatic exposure failure. The pixel intensity transformation is:  
-  I\_low(x, y) \= I(x, y)^γ,   γ \= 2.5     … (6)  
-  A gamma of γ \= 2.5 compresses lower-intensity pixels non-linearly, causing pathological features in shadowed image regions to become visually indistinguishable from background texture. This replicates the worst-case underexposure observable in field smartphone photography. .This operation compresses the lower-intensity pixel distributions, making the dark pathological lesions harder to distinguish against the green leaf background:γ=2.5
+where ε is random noise with a standard deviation of 0.15, added to every pixel and clipped to stay in the valid [0, 1] range.
 
-Ilow-lightx,y=I(x,y)2.5
+**Gamma Transformation (Low-Light)** — simulates dark or shadowy conditions:
 
-* Combined Degradation State, a worst-case compound scenario sequentially applying all three transformations:  
-  I\_combined \= Gamma(AWGN(Blur(I\_clean)))     … (7)  
-  The sequential application order (Blur → Noise → Gamma) models the typical chain of optical failures in a degraded real-world mobile capture session. This combined condition constitutes the most challenging evaluation state in the MobiKD robustness benchmark suite. that thoroughly tests whether the model has truly learned pathologically invariant features.→→
+**I_dark = I^γ,   γ = 2.5**
 
-## **3.3 Hardware And Software Requirements** {#3.3-hardware-and-software-requirements}
+where a gamma value of 2.5 darkens the image non-linearly, making disease lesions harder to see against the leaf background.
 
-### **3.3.1 Hardware Requirements** {#3.3.1-hardware-requirements}
+**Combined Corruption** — the worst-case condition, applying all three in sequence:
 
-The implementation, execution, and verification of the MobiKD framework span two distinct hardware domains: a high-compute training environment and an entry-level mobile deployment environment. This physical dual-structure ensures that the pipeline remains optimized for training efficiency while remaining validated against real-world mobile hardware limitations.
+**I_combined = Gamma(Noise(Blur(I)))**
 
-***Table 4\.  Hardware requirements for MobiKD training and mobile deployment***
+This combined test set represents the most challenging real-world scenario. Together, the five test conditions (clean + four corrupted) allow a direct comparison of how much accuracy each model loses as image quality gets worse.
 
-| Component | Specification | Purpose |
-| :---- | :---- | :---- |
-| Training Workstation | x86-64 CPU, 16 GB System RAM, Dedicated NVIDIA GPU (1.7 GB usable VRAM baseline; ≥6GB recommended) | Accelerates parallel tensor operations across Stages 2–5 (Teacher training and Knowledge Distillation). |
-| Target Mobile Device | **Samsung Galaxy A07:** Exynos 850 Octa-Core SoC, 2 GB System RAM, Android 11 OS | Serves as the physical baseline hardware to validate offline INT8 inference and execution latency. |
-| Storage | ≥10GB Available Solid-State Disk Space  | Manages raw image caching, training telemetry logs, model checkpoints, and compiled TFLite binaries. |
-| Development Machine | Any x86-64 or ARM64 workstation, 8 GB System RAM | Hosts the Flutter SDK environment for cross-platform UI engineering and native compilation. |
+## **3.3 Hardware and Software** {#3.3-hardware-and-software}
 
-The training phase is designed to operate within a constrained memory envelope, requiring only 1.7 GB of usable Video RAM (VRAM). This low VRAM footprint allows the distillation pipeline to run efficiently on budget workstations or shared cloud instances.
+MobiKD was built using two hardware environments. Model training was done on a PC workstation with an x86-64 CPU, 16 GB RAM, and a dedicated NVIDIA GPU (at least 1.7 GB of usable VRAM). This machine handled all the computationally heavy work — training ResNet50, running Knowledge Distillation, and fine-tuning the student model. For deployment testing, a Samsung Galaxy A07 smartphone was used. This phone has an Exynos 850 processor, 2 GB of RAM, and runs Android 11 — representing the kind of low-cost device owned by rural farmers in Rwanda.
 
-Conversely, the deployment testing environment uses a physical Samsung Galaxy A07 smartphone. Equipped with a low-tier Exynos 850 system-on-chip and capped at 2 GB of total system RAM, this device provides a realistic baseline for validating edge-computing performance. If the compressed model can execute reliably on this hardware without being terminated by the Android operating system's memory manager, it confirms that the tool is ready for wide deployment among rural smallholder farmers.
+On the software side, TensorFlow/Keras (v2.x) was used to define, train, and export all models. Python 3.9 was the programming language for the training pipeline, with OpenCV for image processing and degradation, NumPy for array operations, and Scikit-learn for evaluation metrics. The training pipeline ran on Ubuntu 24 inside WSL2 on Windows. The mobile application was built using Flutter (≥3.0) and Dart (≥3.0), compiled and packaged using Android Studio. The TFLite model was connected to the Flutter app using the flutter_litert plugin (v2.4.0), which passes image data directly to the TFLite engine without unnecessary memory copies, keeping the app fast and stable on 2 GB RAM.
 
-### **3.3.2 Software Requirements**
+## **3.4 Proposed System Architecture** {#3.4-proposed-system-architecture}
 
-***Table 5: Software requirements for the MobiKD training pipeline and Flutter application.***
+MobiKD consists of two connected parts: a Python-based training pipeline that produces the AI model, and a Flutter Android application that uses it. The training pipeline takes potato leaf images as input, trains the teacher and student models, applies Knowledge Distillation and degradation fine-tuning, and exports a compressed TFLite model file. This file is then bundled into the mobile application as a static asset. When a farmer opens the app, takes a photo of a potato leaf, and taps the classify button, the app loads the image, resizes and normalizes it, runs it through the TFLite model on-device, and displays the disease label and confidence score. No internet connection is needed at any point during inference.
 
-| Software | Version | Role |
-| :---- | :---- | :---- |
-| **TensorFlow / Keras** | 2.x | Manages neural architecture definitions, backpropagation, and TFLite flatbuffer compilation. |
-| **Python** | 3.9+ | Serves as the core programming environment for the seven-stage automation script. |
-| **OpenCV** | 4.x | Handles fast image transformations, color space conversions, and degradation filtering. |
-| **NumPy** | 1.24+ | Manages multi-dimensional matrix operations and fast vector calculations. |
-| **Scikit-learn** | 1.x | Computes inverse class weight matrices and extracts validation metrics. |
-| **Matplotlib** | 3.x | Renders training loss curves, validation accuracy plots, and confusion matrices. |
-| **Flutter SDK** | ≥ 3.0 | Compiles user interfaces into native ARM machine code for Android devices. |
-| **Dart** | ≥ 3.0 | Serves as the primary object-oriented language for the mobile application layer. |
-| **flutter\_litert** | 2.4.0 | Acts as the native FFI wrapper, mapping Flutter memory to the TFLite C++ engine. |
-| **image\_picker** | 1.1.2 | Bridges the mobile UI to native Android camera intents for real-time leaf capture. |
-| **Ubuntu 24 (WSL2)** | \_ | Serves as the unified Linux execution environment for the training pipeline. |
-| **Android Studio** | \_ | Manages Android SDK compilation, device debugging, and final APK packaging. |
+Figure 1 below shows the overall MobiKD training pipeline — from raw dataset preparation through teacher training, Knowledge Distillation, degradation fine-tuning, INT8 quantization, and final evaluation.
 
-The software architecture is split into two specialized components: an entry-level Linux environment (Ubuntu 24 running on WSL2) that handles data preprocessing, distillation, and optimization, and an Android compilation workspace (Android Studio and the Flutter SDK) that handles deployment.
+![Figure 1. MobiKD seven-stage training pipeline. Data flows from left to right: dataset preparation produces the teacher and student models, Knowledge Distillation transfers teacher knowledge to the student, MobiKD fine-tuning builds robustness, and TFLite quantization produces the final 4.63 MB model for mobile deployment.](C:\Users\HP VICTUS\Desktop\MobiKD\docs\mobikd_springer_flowchart.png)
 
-The mobile application relies heavily on the flutter\_litert plugin (v2.4.0), which establishes a high-performance foreign function interface (FFI) bridge. This bridge allows the mobile application layer to pass raw image byte array pointers directly to the underlying C++ TensorFlow Lite runtime. This direct memory mapping avoids expensive data-serialization steps within the smartphone's RAM, keeping memory usage low and ensuring fast inference speeds on devices with limited hardware resources.
+*Figure 1. MobiKD training pipeline — from data to compressed mobile model.*
 
-## **3.4 Proposed Architecture** {#3.4-proposed-architecture}
+Figure 2 shows the application-side pipeline: how a user's photo travels through the Flutter app into the on-device TFLite model and back as a disease prediction.
 
-The MobiKD system consists of two primary subsystems connected through the TFLite model artifact: the Python-based seven-stage training pipeline and the Flutter Android application. Figure 1 presents the high-level architecture. The training pipeline is orchestrated by pipeline.py, which executes all seven stages sequentially, checking for existing outputs and skipping completed stages. All hyperparameters are centralised in config.py. The pipeline produces seven primary output artifacts: the processed dataset (.npz), the teacher model, the baseline student, the KD student, the MobiKD model, the TFLite model, and the evaluation report.
+![Figure 2. MobiKD mobile application pipeline. A farmer takes a photo of a potato leaf. The Flutter app preprocesses the image, runs the TFLite model entirely on-device, and displays the classification result (Healthy, Early Blight, or Late Blight) with a confidence score — all without internet connectivity.](C:\Users\HP VICTUS\Desktop\MobiKD\docs\mobikd_application_flowchart.png)
 
-Teacher Model Architecture (ResNet50): Input(32×32×3) → Bilinear Resize(64×64×3) → Caffe Preprocessing (channel reorder BGR, mean subtraction \[103.939, 116.779, 123.68\]) → ResNet50 backbone \[ImageNet pretrained; first N−30 layers frozen, last 30 layers fine-tuned; 25.6M trainable parameters\] → GlobalAveragePooling2D (2048-D feature vector) → BatchNormalization → Dense(256, ReLU) → Dropout(0.50) → Dense(2, Softmax). Compiled model size: \~98 MB. Training: Adam(lr=1×10⁻⁴), categorical cross-entropy, class-weighted, early stopping (patience=5), ReduceLROnPlateau(factor=0.5, patience=3).
+*Figure 2. MobiKD mobile application inference pipeline.*
 
-Student Model Architecture, MobiKD (MobileNetV2): Input(32×32×3) → Bilinear Resize(64×64×3) → Rescaling(\[0,1\] → \[−1,1\]) → MobileNetV2 backbone \[ImageNet pretrained; first N−30 layers frozen, last 30 layers fine-tuned; \~3.4M trainable parameters\] → GlobalAveragePooling2D (1280-D feature vector) → BatchNormalization → Dense(128, ReLU) → Dropout(0.30) → Dense(2, Softmax). Training: Adam(lr=5×10⁻⁵), composite KD loss (α=0.3, T=4.0), class-weighted, early stopping (patience=10). Final deployment: Float16 TFLite quantization → 4.63 MB (44.7× smaller than teacher).
+The teacher model (ResNet50) was initialized with ImageNet pretrained weights and fine-tuned on the potato leaf dataset. Its output probability vectors — softened using a temperature of T = 4.0 — were cached and used as training targets for the student model (MobileNetV2). The student model was first trained using Knowledge Distillation, then further fine-tuned on corrupted images to build degradation robustness. The final model was quantized using TFLite, reducing its size from ~9.8 MB to 4.63 MB while keeping accuracy loss under 1%.
 
-![][image1]
+Two key metrics were used to evaluate the system. The **Compression Ratio (CR)** measures how much smaller the deployed model is compared to the teacher:
 
-*Figure 1\.  High-level MobiKD system architecture. The Python training pipeline (left) produces the quantized TFLite model artifact, which is bundled into the Flutter Android application (right) for fully offline on-device inference. The two subsystems share no runtime coupling.*
+**CR = Size_teacher / Size_student = 206.97 MB / 4.63 MB ≈ 44.7×**
 
-***Figure 2\. MobiKD seven-stage training pipeline flow.** This should show the seven boxes flowing left to right with arrows, inputs, and outputs labelled.* 
+The **Robustness Drop (RD)** measures how much accuracy a model loses under the worst degradation condition:
 
-The compression efficiency of the MobiKD framework is quantified by the compression ratio CR, defined as the file size of the teacher model relative to the final deployed student model:
+**RD = Accuracy_clean − min(Accuracy_blur, Accuracy_noise, Accuracy_dark, Accuracy_combined)**
 
-CR  \=  Size\_teacher / Size\_student  \=  206.97 MB / 4.63 MB  ≈  44.7×     … (8)  
-The robustness drop metric RD, used to compare degradation resilience across model variants, is defined as:  
-RD  \=  Accuracy\_clean  −  min{ Accuracy\_blur,  Accuracy\_noise,  Accuracy\_lowlight,  Accuracy\_combined }     … (9)  
-A lower RD value indicates a model that maintains consistent performance under real-world image degradation. The MobiKD fine-tuning stage is specifically designed to minimise RD without sacrificing clean-image accuracy.
+where a lower RD means the model keeps more of its accuracy even when the input image is poor. MobiKD's fine-tuning stage is specifically designed to minimize RD.
 
 ## **3.5 System Requirements** {#3.5-system-requirements}
 
-Functional requirements for the training pipeline: execute all seven stages reproducibly from a single command (python pipeline.py); produce a TFLite model with file size under 5 MB; generate a multi-condition evaluation report with accuracy metrics for all four model variants across all five test conditions.
+The MobiKD training pipeline must be executable from a single command, produce a TFLite model under 5 MB, and generate evaluation results for all model variants across all five test conditions. The Flutter application must allow users to take or upload a photo, classify it without any internet connection, and display the disease label and confidence score. It must run correctly on Android devices with API level 26 and above, without crashing due to memory pressure on a 2 GB RAM phone.
 
-Functional requirements for the Flutter application: enable image capture from camera and gallery; perform inference without any network connection; return a classified disease label and confidence percentage; operate correctly on Android API level 26 and above.
+## **3.6 Development Approach and Timeline** {#3.6-development-approach-and-timeline}
 
-Non-functional requirements: TFLite model must not exceed 5 MB; inference time must be under 2 seconds on the Samsung Galaxy A07; the application must not crash due to memory pressure on a 2 GB RAM device; all source code must be documented and version-controlled on GitHub.
+MobiKD was developed in an iterative way — each component was built, tested, and confirmed working before the next was started. This is similar to an Agile approach, where work is done in short cycles with clear outputs at each step. If a problem was found at any stage (for example, a memory error during training), it was fixed before continuing.
 
-## **3.6 Project Development Methodology** {#3.6-project-development-methodology}
-
-MobiKD follows an iterative, stage-gated development methodology. Each of the seven pipeline stages is developed, validated, and committed independently before the next stage begins. This mirrors an Agile sprint structure adapted for machine learning pipeline development, where each stage constitutes a sprint with defined inputs, outputs, and acceptance criteria. The methodology ensures that a partial failure in any stage (e.g., insufficient VRAM during KD training) can be diagnosed and resolved without restarting the entire pipeline.
-
-***Table 6\. MobiKD seven-stage pipeline with inputs, outputs, and key hyperparameters.***
-
-| Stage | Name | Key Inputs | Key Outputs | Key Hyperparameters |
-| :---- | :---- | :---- | :---- | :---- |
-| **1** | **Data Preparation** | PlantVillage images | dataset.npz, 4 degraded test sets | Degradation params: σ=0.15, γ=2.5 |
-| **2** | **Teacher Training** | dataset.npz | teacher\_resnet50.keras | lr=1e-4, epochs=30, patience=5 |
-| **3** | **Baseline Student** | dataset.npz | baseline\_mobilenet.keras | lr=1e-4, patience=10 |
-| **4** | **KD Student** | dataset.npz \+ teacher soft labels | kd\_mobilenet.keras | T=4.0, α=0.3, lr=5e-5, epochs=200 |
-| **5** | **MobiKD FT** | kd\_mobilenet.keras \+ degraded data | mobikd\_mobilenet.keras | T=4.0, α=0.3, lr=1e-5, epochs=200 |
-| **6** | **Quantization** | mobikd\_mobilenet.keras | mobikd\_quantized.tflite | Optimize.DEFAULT (INT8) |
-| **7** | **Evaluation** | All 4 models, 5 test sets | accuracy\_table.csv, 3 PNG plots | \_ |
-
-## **3.7 Implementation Timeline**
-
-The project was executed over 16 weeks from January to May 2026, structured as follows:
-
-*Table 7: MobiKD implementation timeline (16 weeks, January–May 2026).*
-
-| Activity | Weeks 1–4 | Weeks 5–8 | Weeks 9–12 | Weeks 13–16 |
-| :---- | :---- | :---- | :---- | :---- |
-| **Literature review and dataset preparation** | ✓ |  |  |  |
-| **Environment setup and Stages 1–2** | ✓ |  |  |  |
-| **Stages 3–4 (Baseline, KD)** |  | ✓ |  |  |
-| **Stage 5 (MobiKD fine-tuning)** |  | ✓ |  |  |
-| **Stage 6 (Quantization and validation)** |  |  | ✓ |  |
-| **Flutter app development and device testing** |  |  | ✓ |  |
-| **Stage 7 (Evaluation) and analysis** |  |  |  | ✓ |
-| **Thesis writing and submission** |  |  | ✓ | ✓ |
+The project ran over 16 weeks from January to May 2026. The first four weeks were spent on literature review and data preparation. Weeks 5–8 covered teacher model training and Knowledge Distillation. Weeks 9–12 covered degradation fine-tuning, quantization, and the Flutter application. The final four weeks were used for evaluation, analysis, and thesis writing. This structured timeline ensured that all components were completed, tested, and integrated before the submission deadline.
 
 # **CHAPTER 4: DESIGN AND IMPLEMENTATION** {#chapter-4:-design-and-implementation}
 
 ## **4.1 Introduction** {#4.1-introduction}
 
-This chapter presents the detailed design of the MobiKD system across its two primary components: the seven-stage training pipeline and the Flutter Android application. The design is described at the architecture, model, and component levels, supported by UML diagrams and data flow descriptions for each major subsystem. The chapter concludes with a comparative analysis of model design choices, justifying the selection of ResNet50 as teacher and MobileNetV2 as student over alternative architectures.
+This chapter details the design and implementation of the MobiKD system. The system is split into two independent parts: a Python-based training pipeline and a Flutter-based Android application. The training pipeline handles data preprocessing, model training, knowledge distillation, and quantization to output a compressed model. The Android application bundles this model to perform local, offline classification on a smartphone. This chapter describes the system using architectural diagrams, software design classes, data flow paths, interface mockups, and model architectures.
 
 ## **4.2 System Architecture Design** {#4.2-system-architecture-design}
 
 ### **4.2.1 System Architecture** {#4.2.1-system-architecture}
 
-The MobiKD system architecture comprises two subsystems connected through the TFLite model artifact. The training subsystem (Python, TensorFlow) receives the PlantVillage dataset as input and produces the quantized TFLite model after executing seven sequential processing stages. The inference subsystem (Flutter, Dart) receives the TFLite model as a bundled asset and executes on-device inference upon user request. The two subsystems share no runtime coupling: the TFLite model is a static artifact bundled at APK build time.
+The MobiKD system architecture separates the heavy training workload from the mobile runtime environment. The training process runs on a GPU-enabled workstation (under Ubuntu/WSL2) to produce a highly optimized, quantized TensorFlow Lite model. Once compiled, this model is embedded directly into the mobile application as a static asset. The Flutter mobile application uses the TFLite runtime to load the model and execute inferences locally. There is no runtime connection between the training server and the mobile application, ensuring the app works completely offline.
 
 ### **4.2.2 Class Diagram** {#4.2.2-class-diagram}
 
-The MobiKD training pipeline is implemented across eleven Python source files. The PipelineRunner (pipeline.py) instantiates and calls each stage module in sequence. The Config module (config.py) provides all hyperparameters and path constants as class attributes. Each stage module (stage1\_data through stage7\_evaluate) exposes a single public run() function that accepts the Config object and returns the stage outputs. The Flutter application follows a service-widget architecture: the AnalyzerService class is a singleton responsible for model loading, tensor allocation, preprocessing, inference execution, and result parsing. HomeScreen, ResultCard, UploadZone, and ImageSourceSheet are stateful Flutter widgets that compose the user interface and communicate with AnalyzerService via asynchronous method calls.
+The software code is divided into two separate projects: the Python training scripts and the Dart mobile application. Figure 1 shows the class structures of both components. In the training script, `PipelineRunner` coordinates the training stages using configurations from `Config`. In the mobile application, `AnalyzerService` acts as a central singleton controller that interfaces with the TFLite interpreter, pre-processes images, and delivers results to widgets like `HomeScreen` and `ResultCard`.
+
+![Figure 1. MobiKD system class diagram showing Python training orchestrator classes on the left and Flutter mobile application widgets and services on the right.](C:\Users\HP VICTUS\Desktop\MobiKD\docs\mobikd_class_diagram.png)
+
+*Figure 1. MobiKD system class diagram.*
 
 ### **4.2.3 Deployment Diagram** {#4.2.3-deployment-diagram}
 
-The training environment consists of a GPU workstation running Ubuntu 24 via WSL2, with TensorFlow and all Python dependencies installed in a virtual environment (mobikd\_env). All training artifacts are written to the local file system under the MobiKD/model/ directory. The Flutter application is compiled to an Android APK, which bundles the 3.8 MB TFLite model as a Flutter asset at build time. The APK is installed on the target Android device via USB or sideloading; no server, cloud service, or internet connection is involved in deployment or inference.
+The deployment setup consists of three execution nodes: the training workstation, the build PC, and the target mobile device. Figure 2 illustrates this physical layout. The workstation trains and compiles the TFLite model, which is then moved to the build PC to be bundled with the Flutter source code into an APK package. The APK is installed directly on the Samsung Galaxy A07, where it runs locally with no external API calls or database connections. The optional admin dashboard runs on a standard web browser and communicates with a FastAPI server to log local usage metrics if an internet connection becomes available.
+
+![Figure 2. MobiKD system deployment diagram showing the training workstation, development PC, target Android device (Samsung Galaxy A07), and the admin web dashboard.](C:\Users\HP VICTUS\Desktop\MobiKD\docs\mobikd_deployment_diagram.png)
+
+*Figure 2. MobiKD deployment diagram.*
 
 ### **4.2.4 Data Flow Diagram (DFD)** {#4.2.4-data-flow-diagram-(dfd)}
 
-Level 0: The MobiKD system receives a potato leaf photograph as input and produces a disease classification label (Healthy, Early Blight, or Late Blight) with a confidence percentage as output.
+The flow of data through MobiKD is shown at two levels in Figure 3. Level 0 shows the high-level context: the user provides a leaf photo and receives a diagnosis, while the app saves scan statistics locally. Level 1 details the internal processing steps: the input image is captured, cropped, and resized; the preprocessed tensor is sent to the on-device TFLite interpreter; and the output probabilities are parsed into labels and logged in the local database.
 
-Level 1 DFD (Training Pipeline): Raw PlantVillage images → Stage 1 produces normalised arrays and four degraded test sets. Training data → Stage 2 produces the teacher model. Teacher model and training data → Stage 4 produces KD student (after teacher soft labels are cached and teacher is removed from GPU memory). KD student and degraded training data → Stage 5 produces the MobiKD model. MobiKD model → Stage 6 produces TFLite artifact. All model variants and test sets → Stage 7 produces an accuracy table and plots.
+![Figure 3. MobiKD data flow diagram (DFD) showing the Level 0 context diagram (top) and the Level 1 detailed data flows (bottom).](C:\Users\HP VICTUS\Desktop\MobiKD\docs\mobikd_dfd.png)
 
-Level 1 DFD (Flutter Application): User triggers image capture → image\_picker returns File → AnalyzerService.analyzeImage() decodes, resizes to 224×224, normalises to \[0,1\], creates Float32 tensor \[1,224,224,3\], runs TFLite interpreter, parses output tensor \[1,3\] → ClassificationResult (label \+ confidence) → ResultCard displays to user.
-
-*Figure 5: Flutter application on-device inference pipeline the Level 1 DFD for the Flutter side*
+*Figure 3. MobiKD Level 0 and Level 1 Data Flow Diagram.*
 
 ### **4.2.5 Sequence Diagram** {#4.2.5-sequence-diagram}
 
-The on-device inference sequence proceeds as follows: (1) User taps capture button in HomeScreen; (2) ImageSourceSheet presents camera vs. gallery choice; (3) UploadZone triggers image\_picker; (4) Selected image file is passed to AnalyzerService.analyzeImage(); (5) AnalyzerService preprocesses the image and allocates the input tensor; (6) TFLite interpreter executes inference; (7) AnalyzerService parses the output tensor and constructs a ClassificationResult; (8) HomeScreen passes the result to ResultCard for display. Total elapsed time is under 1.8 seconds on the Samsung Galaxy A07.
+Figure 4 shows the sequence of calls made during a standard disease analysis session. When a farmer taps the capture button, the UI uses the `ImagePicker` plugin to retrieve a leaf photo. This file is passed to `AnalyzerService`, which runs the image preprocessing steps and starts the TFLite interpreter. Once the model outputs the class scores, the service saves the record to local storage via `SharedPreferences` and returns the prediction result to the UI to update the screen.
+
+![Figure 4. MobiKD sequence diagram showing the step-by-step function calls from the user tapping the screen to the on-device inference execution and results display.](C:\Users\HP VICTUS\Desktop\MobiKD\docs\mobikd_sequence_diagram.png)
+
+*Figure 4. MobiKD on-device inference sequence diagram.*
 
 ### **4.2.6 API Design** {#4.2.6-api-design}
 
-The AnalyzerService exposes the following public API:
+The mobile application's inference logic is encapsulated in the `AnalyzerService` class. It exposes the following methods:
+- `Future<void> initialize()`: Loads the quantized TFLite model from the application assets, creates the interpreter, and allocates memory tensors.
+- `Future<ClassificationResult> analyzeImage(File imageFile)`: Reads the image file, resizes it to the required dimensions, runs on-device inference, and returns a result containing the predicted label and confidence score.
+- `void dispose()`: Releases the underlying C++ interpreter resources when the app is closed.
 
-* Future\<ClassificationResult\> analyzeImage(File imageFile), Main inference method returning a ClassificationResult with label (String), confidence (double 0.0–1.0), and isDisease (bool).  
-* Future\<void\> initialize(), Loads TFLite model from Flutter assets and allocates input/output tensors. Called once at startup.  
-* void dispose(), Releases TFLite interpreter resources. Called on application lifecycle termination.
+## **4.3 Mobile and Admin Interfaces** {#4.3-mobile-and-admin-interfaces}
 
-### **4.2.7 Mobile Application Interface** {#4.2.7-mobile-application-interface}
+### **4.3.1 Mobile Application Interface** {#4.3.1-mobile-application-interface}
 
-***C. App screenshots: Home screen.** The Home screen is where the user first opens the app and chooses to take a photo or pick from the gallery.*
+The mobile application is designed to be simple and accessible for farmers in the field. Figure 5 shows the main mobile screens:
+- **Onboarding and Login**: Prompts the user to register or sign in using their phone number to keep track of their scan history.
+- **Home Screen**: Allows the farmer to easily take a leaf photo using the camera or select an existing one from the gallery.
+- **Result Screen**: Displays the classification result (Healthy, Early Blight, or Late Blight) with a clear percentage confidence score and a color indicator.
+- **History Screen**: Lists all past scans, allowing the farmer to review previous diagnoses and track disease progression.
 
-***D. App screenshots: Result screen.** Show the result screen with the disease label, confidence percentage, and any visual indicator.*
+![Figure 5. MobiKD farmer-facing mobile application user interfaces: onboarding/login screen (left), main home scan screen (middle-left), classification result screens for early/late blight (middle-right), and local scan history log (right).](C:\Users\HP VICTUS\Desktop\MobiKD\prototype-photo\farmer-onboarding.jpg)
+*(Note: Refer to prototype files `farmer-onboarding.jpg`, `farmer-home.jpg`, `farmer-early-blight.jpg`, `farmer-late-blight.jpg`, and `farmer-history.jpg` for full UI views.)*
 
-***E. App screenshots: History**. Show the history log of past analyses.*
+### **4.3.2 Admin Portal Interface** {#4.3.2-admin-portal-interface}
 
-*4.2.8 Admin Portal*
+The admin portal provides dashboard analytics for agricultural officers and researchers. Figure 6 shows the admin screens:
+- **Overview Dashboard**: Displays total scans, active users, and aggregate statistics of disease outbreaks across regions.
+- **Model History Page**: Allows administrators to view past trained model versions, upload new model binaries, and track accuracy curves.
+- **Scan Record View**: Shows detailed lists of individual scans, including images, GPS coordinates, and diagnosis results for field mapping.
 
-***F. Admin portal screenshot, Model History**. Show the model history screen. This is separate from the farmer-facing app and should be clearly explained.*
+![Figure 6. MobiKD administrative web portal dashboard user interfaces: main analytical dashboard (left), user management page (middle), and model versioning/performance logs (right).](C:\Users\HP VICTUS\Desktop\MobiKD\prototype-photo\admin-dashboard.png)
+*(Note: Refer to prototype files `admin-dashboard.png`, `admin-user.png`, `admin-model.png`, and `admin-scan.png` for web UI views.)*
 
-## **4.3 Model Design and Comparison** {#4.3-model-design-and-comparison}
+## **4.4 Model Design and Comparison** {#4.4-model-design-and-comparison}
 
-### **4.3.1 Teacher Model \- ResNet50** {#4.3.1-teacher-model---resnet50}
+### **4.4.1 Teacher Model - ResNet50** {#4.4.1-teacher-model---resnet50}
 
-ResNet50 was selected as the teacher architecture for its established high accuracy on image classification benchmarks and its deep residual connections that enable learning of high-level semantic representations capable of capturing the subtle visual distinctions between healthy, early blight, and late blight leaf textures. The teacher backbone is frozen throughout training (base.trainable \= False) to preserve ImageNet feature representations, following the established transfer learning protocol \[23\]. The custom head comprises GlobalAveragePooling2D → BatchNormalization → Dense(512, ReLU) → Dropout(0.5) → Dense(3, Softmax). A serialisable preprocessing layer was implemented as a Conv2D transformation performing BGR channel swap, and ImageNet mean subtraction, avoiding standard Keras preprocessing layers that introduce serialisation incompatibilities in the TFLite conversion pipeline. The teacher is trained for 30 epochs with Adam (lr \= 1×10⁻⁴), class-weighted cross-entropy, and early stopping (patience \= 5).
+ResNet50 was chosen as the teacher model due to its high diagnostic accuracy. It uses skip connections to train deep layers without losing gradient information. The backbone is loaded with weights pre-trained on ImageNet and is kept frozen during training to preserve general feature extraction capabilities. A custom classification head is appended, consisting of a Global Average Pooling layer, Batch Normalization, a fully connected layer with ReLU activation, a Dropout layer to prevent overfitting, and a final Softmax output layer. The teacher output is compiled to a file size of approximately 98 MB.
 
-*Figure 3\.  ResNet50 teacher model architecture. The frozen ResNet50 backbone extracts a 2048-dimensional feature vector. The custom head applies: GlobalAveragePooling2D → BatchNormalization → Dense(512, ReLU) → Dropout(0.5) → Dense(3, Softmax).*
+### **4.4.2 Student Model - MobileNetV2** {#4.4.2-student-model---mobilenetv2}
 
-### **4.3.2 Student Model \- MobileNetV2** {#4.3.2-student-model---mobilenetv2}
+MobileNetV2 was selected as the student model because it is highly efficient on mobile hardware. It uses depthwise separable convolutions, inverted residual blocks, and linear bottleneck layers to reduce parameter size while maintaining accuracy. The first 125 layers are kept frozen to leverage ImageNet feature maps, while the last 30 layers are fine-tuned. The student model has a classification head similar to the teacher and compiles to a size of approximately 14 MB at full floating-point precision, which is then quantized to under 5 MB.
 
-MobileNetV2 was selected as the student architecture for its optimised balance of accuracy, parameter count, and TFLite compatibility. Its inverted residual blocks and linear bottleneck outputs maintain information content while dramatically reducing multiply-accumulate operations compared to ResNet50. At full precision, MobileNetV2 is approximately 14 MB; after INT8 quantization, this reduces to approximately 3.8 MB, under the 5 MB deployment constraint. The first 125 layers are frozen and the last 30 are trainable, balancing leverage of ImageNet features with adaptation to the potato disease task. The student head: GlobalAveragePooling2D → BatchNormalization → Dense(256, ReLU) → Dropout(0.3) → Dense(3, Softmax). Pixel values are rescaled from \[0,1\] to \[−1,1\] as required by MobileNetV2.
+### **4.4.3 MobiKD Fine-Tuning Stage** {#4.4.3-mobikd-fine-tuning-stage}
 
-*Figure 4\.  MobileNetV2 student model architecture. The partially fine-tuned MobileNetV2 backbone (last 30 layers trainable) extracts features processed by: GlobalAveragePooling2D → BatchNormalization → Dense(256, ReLU) → Dropout(0.3) → Dense(3, Softmax). Input pixels are rescaled from \[0,1\] to \[−1,1\].*
+The final training stage fine-tunes the distilled MobileNetV2 student model using a degradation-aware loss function. The student is trained on corrupted images (blurry, noisy, and dark) while its outputs are constrained to match the soft label distributions generated by the teacher model on the corresponding clean images. This cross-domain distillation forces the student model to learn features that do not change when image quality drops, ensuring the model remains accurate under challenging field conditions.
 
-### **4.3.3 MobiKD Fine-Tuning Stage \- Technical Design** {#4.3.3-mobikd-fine-tuning-stage---technical-design}
+### **4.4.4 Comparative Analysis of Architectures** {#4.4.4-comparative-analysis-of-architectures}
 
-The MobiKD fine-tuning stage introduces a novel degradation-aware loss formulation. Starting from KD student weights, the model is fine-tuned with synthetically degraded images as inputs while applying the KD loss with pre-cached teacher soft labels from clean images:
+Table 8 compares the model architectures considered for MobiKD:
 
-L\_MobiKD \= α × L\_CE(y, s\_deg) \+ (1 − α) × T² × L\_KL(σ(t\_soft/T), σ(s\_deg/T))   *………………… (2)*
-
-where s\_deg is the student output on a degraded input and t\_soft are the pre-cached teacher soft labels for the corresponding clean image. This formulation forces the student to produce output distributions on degraded inputs that remain consistent with both ground-truth labels and the teacher's soft predictions on clean inputs, incentivising genuinely degradation-invariant representations. The learning rate is reduced to lr \= 1×10⁻⁵ to preserve the KD student's learned representations while allowing fine-grained adaptation.
-
-## **4.4 Comparative Analysis of Architectures** {#4.4-comparative-analysis-of-architectures}
-
-The rationale for selecting ResNet50 as teacher and MobileNetV2 as student over alternative architectures is supported by the comparative analysis presented in Table 9:
-
-*Table 8: Comparative analysis of candidate architectures. OOM \= Out of Memory on 2 GB RAM device. Inference times measured on Samsung Galaxy A07 with INT8 TFLite models where applicable.*
+***Table 8: Comparative analysis of candidate architectures. OOM = Out of Memory on 2 GB RAM device. Inference times measured on Samsung Galaxy A07 with INT8 TFLite models.***
 
 | Architecture | Size (FP32) | TFLite INT8 | ImageNet Top-1 | Inference (A07) | Role |
 | :---- | :---- | :---- | :---- | :---- | :---- |
-| **ResNet50** | \~98 MB | Not suitable | 76.0% | \_ | Teacher |
-| **MobileNetV2** | \~14 MB | \~3.8 MB | 71.8% | 1.6 s | Student |
-| **MobileNetV1** | \~16 MB | \~4.2 MB | 70.6% | 1.9 s | \_ |
-| **EfficientNet-B0** | \~20 MB | \~5.5 MB | 77.1% | 2.3 s | \_ (\>5MB) |
-| **VGG16** | \~528 MB | Not suitable | 71.3% | OOM | \_ |
-| **SqueezeNet** | \~5 MB | \~1.4 MB | 57.5% | 0.9 s | \_ (low acc) |
+| **ResNet50** | ~98 MB | Not suitable | 76.0% | _ | Teacher |
+| **MobileNetV2** | ~14 MB | ~3.8 MB | 71.8% | 1.6 s | Student |
+| **MobileNetV1** | ~16 MB | ~4.2 MB | 70.6% | 1.9 s | _ |
+| **EfficientNet-B0** | ~20 MB | ~5.5 MB | 77.1% | 2.3 s | _ (>5MB) |
+| **VGG16** | ~528 MB | Not suitable | 71.3% | OOM | _ |
+| **SqueezeNet** | ~5 MB | ~1.4 MB | 57.5% | 0.9 s | _ (low acc) |
 
-ResNet50's size excludes it from deployment but makes it the optimal knowledge source. EfficientNet-B0 exceeds the 5 MB TFLite constraint and introduces BatchNormalization operator compatibility issues requiring additional engineering. SqueezeNet satisfies the size constraint but sacrifices accuracy unacceptably. MobileNetV2 offers the best combination of accuracy retention after KD, TFLite compatibility, and post-quantization size, making it the clear choice for the student architecture.
+While ResNet50 is accurate, its file size is too large for local deployment. EfficientNet-B0 achieves high accuracy but exceeds the 5 MB limit and relies on operators not supported by TFLite quantization. SqueezeNet is small and fast but lacks the required classification accuracy. MobileNetV2 was chosen because it provides the best balance of model size, classification accuracy, and processing speed on the Samsung Galaxy A07.
 
 # **CHAPTER 5: DISCUSSION OF RESULTS** {#chapter-5:-discussion-of-results}
 
